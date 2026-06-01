@@ -99,13 +99,13 @@
             </div>
         </div>
 
-        <div class="constructor-card constructor-card-disabled">
+        <a href="{{ route('rpd-programs.curriculum.index', $rpdProgram) }}" class="constructor-card">
             <div class="constructor-number">3</div>
             <div>
                 <strong>Учебный план</strong>
                 <span>Разделы, темы, теория, практика, формы контроля.</span>
             </div>
-        </div>
+        </a>
 
         <div class="constructor-card constructor-card-disabled">
             <div class="constructor-number">4</div>
