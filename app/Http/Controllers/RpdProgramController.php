@@ -243,7 +243,7 @@ class RpdProgramController extends Controller
 
     private function validateBeforeSubmit(RpdProgram $rpdProgram): array
     {
-        $rpdProgram->load('curriculumItems.children');
+        $rpdProgram->load(['curriculumItems.children', 'contentSections']);
 
         $errors = [];
 
@@ -294,6 +294,20 @@ class RpdProgramController extends Controller
             }
         }
 
+        foreach ($sections as $section) {
+            $contentSection = $rpdProgram->contentSections
+                ->firstWhere('number', $section->number);
+
+            if (! $contentSection) {
+                $errors[] = "Для раздела «{$section->title}» не создано содержание. Синхронизируйте содержание с учебным планом.";
+                continue;
+            }
+
+            if (blank($contentSection->content)) {
+                $errors[] = "Не заполнено содержание раздела «{$section->title}».";
+            }
+        }
+        
         return $errors;
     }
 
