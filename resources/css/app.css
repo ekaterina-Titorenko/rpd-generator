@@ -774,3 +774,36 @@ a {
 .curriculum-total-row td:first-child {
     border-left: 1px solid var(--border);
 }
+
+.curriculum-row-section td {
+    background: #dbe3f0 !important;
+}
+
+.curriculum-row-section .curriculum-number-cell,
+.curriculum-row-section textarea,
+.curriculum-row-section input,
+.curriculum-row-section .readonly-hours-cell {
+    font-weight: 700;
+}
+
+.curriculum-row-section textarea,
+.curriculum-row-section input {
+    background: #eef3fa;
+}
+
+.curriculum-row-topic td {
+    background: #ffffff;
+}
+
+.curriculum-row-topic .curriculum-child-title {
+    padding-left: 28px !important;
+}
+
+.curriculum-row-final_work td {
+    background: #eef2ff !important;
+}
+
+.curriculum-row-final_work .curriculum-number-cell {
+    color: var(--primary);
+    font-weight: 700;
+}

@@ -1,4 +1,4 @@
-<tr class="{{ $rowClass }}">
+<tr class="{{ trim($rowClass . ' curriculum-row-' . $item->type) }}">
     <td class="curriculum-number-cell">
         {{ $item->number ?: '—' }}
         @if ($item->type === 'final_work')
