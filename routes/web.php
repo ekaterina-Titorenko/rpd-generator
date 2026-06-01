@@ -1,27 +1,20 @@
 <?php
 
-use App\Http\Controllers\RpdCurriculumItemController;
-use App\Http\Controllers\RpdProgramController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('rpd-programs.index');
+    return view('welcome');
 });
 
-Route::resource('rpd-programs', RpdProgramController::class);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::prefix('rpd-programs/{rpdProgram}')
-    ->name('rpd-programs.')
-    ->group(function () {
-        Route::get('curriculum', [RpdCurriculumItemController::class, 'index'])
-            ->name('curriculum.index');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-        Route::post('curriculum', [RpdCurriculumItemController::class, 'store'])
-            ->name('curriculum.store');
-
-        Route::put('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'update'])
-            ->name('curriculum.update');
-
-        Route::delete('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'destroy'])
-            ->name('curriculum.destroy');
-    });
+require __DIR__.'/auth.php';
