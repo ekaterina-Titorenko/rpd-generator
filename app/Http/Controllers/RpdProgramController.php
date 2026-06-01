@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 
 class RpdProgramController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $programs = RpdProgram::query()
+            ->when($request->user()->role === 'teacher', function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id);
+            })
             ->latest()
             ->get();
 
@@ -35,6 +38,7 @@ class RpdProgramController extends Controller
         ]);
 
         $program = RpdProgram::create(array_merge($validated, [
+            'user_id' => $request->user()->id,
             'education_form' => 'Занятия проводятся в очном и дистанционном формате с использованием Личного кабинета школьника/абитуриента на сайте Приёмной комиссии РТУ МИРЭА.',
 
             'study_mode' => "Данная Программа рассчитана на освоение в течение 1-го года учащимися в возрасте от 14 до 18 лет, не зависимо от пола, 1-2 раза в неделю по 2 академических часа. Академический час для обучающихся равен 45 минутам.\n\nТиповой режим занятий:\nПо будням с 16:00 до 17:30, с 17:45 до 19:15. При необходимости могут назначаться дополнительные временные интервалы занятий при соблюдении общего режима обучения.",
