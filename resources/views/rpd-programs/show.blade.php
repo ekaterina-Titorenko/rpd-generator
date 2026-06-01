@@ -118,6 +118,40 @@
     </div>
 
     <div class="card-body document-section">
+        <h3>Описание программы</h3>
+        <p>{{ $rpdProgram->program_description ?: 'Не заполнено' }}</p>
+
+        <h3>Нормативно-правовая база</h3>
+        <p>{{ $rpdProgram->legal_basis ?: 'Не заполнено' }}</p>
+
+        <h3>Актуальность программы</h3>
+        <p>{{ $rpdProgram->relevance ?: 'Не заполнено' }}</p>
+
+        <h3>Цель программы</h3>
+        <p>{{ $rpdProgram->goal ?: 'Не заполнено' }}</p>
+
+        <h3>Задачи программы</h3>
+
+        <h4>Обучающие:</h4>
+        <ul>
+            @foreach (($rpdProgram->learning_tasks ?? []) as $task)
+            <li>{{ $task }}</li>
+            @endforeach
+        </ul>
+
+        <h4>Развивающие:</h4>
+        <ul>
+            @foreach (($rpdProgram->development_tasks ?? []) as $task)
+            <li>{{ $task }}</li>
+            @endforeach
+        </ul>
+
+        <h3>Планируемые результаты обучения</h3>
+        <ul>
+            @foreach (($rpdProgram->planned_results ?? []) as $result)
+            <li>{{ $result }}</li>
+            @endforeach
+        </ul>
         <h3>Форма обучения</h3>
         <p>{{ $rpdProgram->education_form }}</p>
 
