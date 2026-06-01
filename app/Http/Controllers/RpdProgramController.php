@@ -308,6 +308,20 @@ class RpdProgramController extends Controller
             $errors[] = 'Не заполнены типовые темы проектных работ.';
         }
 
+        $rpdProgram->loadMissing('resources');
+
+        if ($rpdProgram->resources->where('type', 'main_recommended')->isEmpty()) {
+            $errors[] = 'Не заполнен список основной рекомендуемой литературы.';
+        }
+
+        if ($rpdProgram->resources->where('type', 'additional')->isEmpty()) {
+            $errors[] = 'Не заполнена дополнительная литература.';
+        }
+
+        if ($rpdProgram->resources->where('type', 'internet')->isEmpty()) {
+            $errors[] = 'Не заполнены ресурсы информационно-телекоммуникационной сети Интернет.';
+        }
+
         return $errors;
     }
 

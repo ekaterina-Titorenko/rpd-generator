@@ -6,7 +6,7 @@ use App\Http\Controllers\RpdProgramController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RpdContentSectionController;
 use App\Http\Controllers\RpdAssessmentItemController;
-
+use App\Http\Controllers\RpdResourceController;
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -66,6 +66,18 @@ Route::middleware('auth')->group(function () {
 
             Route::put('assessment', [RpdAssessmentItemController::class, 'update'])
                 ->name('assessment.update');
+
+            Route::get('resources', [RpdResourceController::class, 'index'])
+                ->name('resources.index');
+
+            Route::post('resources', [RpdResourceController::class, 'store'])
+                ->name('resources.store');
+
+            Route::put('resources/{resource}', [RpdResourceController::class, 'update'])
+                ->name('resources.update');
+
+            Route::delete('resources/{resource}', [RpdResourceController::class, 'destroy'])
+                ->name('resources.destroy');
         });
 });
 

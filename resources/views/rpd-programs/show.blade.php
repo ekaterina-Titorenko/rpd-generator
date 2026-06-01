@@ -319,29 +319,80 @@
 
     <div class="card-body">
         @if (
-            blank($rpdProgram->control_survey_materials)
-            && blank($rpdProgram->final_practical_work_materials)
-            && blank($rpdProgram->project_topics)
+        blank($rpdProgram->control_survey_materials)
+        && blank($rpdProgram->final_practical_work_materials)
+        && blank($rpdProgram->project_topics)
         )
-            <div class="empty-state">
-                <h2>Оценочные материалы пока не заполнены</h2>
-                <p>Заполните материалы для опросов, итоговой практической работы и темы проектов.</p>
-            </div>
+        <div class="empty-state">
+            <h2>Оценочные материалы пока не заполнены</h2>
+            <p>Заполните материалы для опросов, итоговой практической работы и темы проектов.</p>
+        </div>
         @else
-            <div class="document-section">
-                <h3>Материалы для проведения контрольных опросов</h3>
-                <p>{{ $rpdProgram->control_survey_materials ?: 'Не заполнено' }}</p>
+        <div class="document-section">
+            <h3>Материалы для проведения контрольных опросов</h3>
+            <p>{{ $rpdProgram->control_survey_materials ?: 'Не заполнено' }}</p>
 
-                <h3>Материалы для проведения итоговой практической работы</h3>
-                <p>{{ $rpdProgram->final_practical_work_materials ?: 'Не заполнено' }}</p>
+            <h3>Материалы для проведения итоговой практической работы</h3>
+            <p>{{ $rpdProgram->final_practical_work_materials ?: 'Не заполнено' }}</p>
 
-                <h3>Типовые темы проектных работ</h3>
-                <p>{{ $rpdProgram->project_topics ?: 'Не заполнено' }}</p>
-            </div>
+            <h3>Типовые темы проектных работ</h3>
+            <p>{{ $rpdProgram->project_topics ?: 'Не заполнено' }}</p>
+        </div>
         @endif
     </div>
 </section>
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">6. Литература и интернет-ресурсы</h2>
+            <p class="card-description">
+                Список основной рекомендуемой литературы, дополнительная литература и интернет-ресурсы.
+            </p>
+        </div>
 
+        <div class="actions">
+            <a href="{{ route('rpd-programs.resources.index', $rpdProgram) }}" class="btn btn-secondary">
+                Редактировать источники
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if ($rpdProgram->resources->isEmpty())
+        <div class="empty-state">
+            <h2>Источники пока не добавлены</h2>
+            <p>Добавьте литературу и интернет-ресурсы.</p>
+        </div>
+        @else
+        <div class="document-section">
+            @foreach ([
+            'main_recommended' => 'Список основной рекомендуемой литературы',
+            'additional' => 'Дополнительная литература',
+            'internet' => 'Ресурсы информационно-телекоммуникационной сети Интернет',
+            ] as $type => $label)
+            @php
+            $resources = $rpdProgram->resources->where('type', $type);
+            @endphp
+
+            @if ($resources->isNotEmpty())
+            <h3>{{ $label }}</h3>
+            <ol>
+                @foreach ($resources as $resource)
+                <li>
+                    {{ $resource->title }}
+                    @if ($resource->url)
+                    <br>
+                    <span class="muted">{{ $resource->url }}</span>
+                    @endif
+                </li>
+                @endforeach
+            </ol>
+            @endif
+            @endforeach
+        </div>
+        @endif
+    </div>
+</section>
 @if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
 <section class="card">
     <div class="card-header">
