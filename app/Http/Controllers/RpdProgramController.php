@@ -48,7 +48,7 @@ class RpdProgramController extends Controller
             ->route('rpd-programs.show', $program)
             ->with('success', 'РПД создана.');
     }
-    
+
     public function show(RpdProgram $rpdProgram)
     {
         return view('rpd-programs.show', compact('rpdProgram'));
@@ -61,7 +61,22 @@ class RpdProgramController extends Controller
 
     public function update(Request $request, RpdProgram $rpdProgram)
     {
-        //
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'direction' => ['required', 'in:technical,science,social_humanitarian'],
+            'complexity_level' => ['required', 'string', 'max:255'],
+            'year' => ['required', 'integer', 'min:2020', 'max:2100'],
+            'smko_code' => ['nullable', 'string', 'max:255'],
+            'total_hours' => ['required', 'integer', 'min:1', 'max:1000'],
+            'study_period' => ['required', 'string', 'max:255'],
+            'students_age' => ['required', 'string', 'max:255'],
+        ]);
+
+        $rpdProgram->update($validated);
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'Общие сведения РПД обновлены.');
     }
 
     public function destroy(RpdProgram $rpdProgram)
