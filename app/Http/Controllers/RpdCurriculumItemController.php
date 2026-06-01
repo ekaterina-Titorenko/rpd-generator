@@ -2,35 +2,94 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RpdControlForm;
 use App\Models\RpdCurriculumItem;
 use App\Models\RpdProgram;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RpdCurriculumItemController extends Controller
 {
     public function index(RpdProgram $rpdProgram)
     {
-        $rpdProgram->load('curriculumItems');
+        $rpdProgram->load([
+            'curriculumItems.children',
+            'curriculumItems.controlForm',
+        ]);
 
-        return view('rpd-programs.curriculum.index', compact('rpdProgram'));
+        $items = $rpdProgram->curriculumItems()
+            ->with(['children', 'controlForm'])
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
+
+        $sections = $rpdProgram->curriculumItems()
+            ->where('type', 'section')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
+
+        $controlForms = RpdControlForm::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('rpd-programs.curriculum.index', compact(
+            'rpdProgram',
+            'items',
+            'sections',
+            'controlForms'
+        ));
     }
 
     public function store(Request $request, RpdProgram $rpdProgram)
     {
         $validated = $request->validate([
-            'number' => ['nullable', 'string', 'max:255'],
+            'type' => ['required', Rule::in(['section', 'topic', 'final_work'])],
+            'parent_id' => ['nullable', 'integer', 'exists:rpd_curriculum_items,id'],
             'title' => ['required', 'string', 'max:255'],
             'total_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
+            'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
-            'is_final_work' => ['nullable', 'boolean'],
         ]);
 
-        $validated['is_final_work'] = $request->boolean('is_final_work');
-        $validated['sort_order'] = $rpdProgram->curriculumItems()->max('sort_order') + 1;
+        if ($validated['type'] === 'topic') {
+            $parent = $rpdProgram->curriculumItems()
+                ->where('type', 'section')
+                ->findOrFail($validated['parent_id']);
+
+            $validated['parent_id'] = $parent->id;
+            $validated['number'] = $this->makeTopicNumber($parent);
+        } elseif ($validated['type'] === 'section') {
+            $validated['parent_id'] = null;
+            $validated['number'] = $this->makeSectionNumber($rpdProgram);
+        } else {
+            $validated['parent_id'] = null;
+            $validated['number'] = null;
+            $validated['is_final_work'] = true;
+        }
+
+        if (! empty($validated['control_form_id'])) {
+            $controlForm = RpdControlForm::find($validated['control_form_id']);
+            $validated['control_form'] = $controlForm?->name;
+        } elseif (! empty($validated['control_form'])) {
+            $controlForm = RpdControlForm::query()->firstOrCreate(
+                ['name' => trim($validated['control_form'])],
+                ['is_default' => false, 'is_active' => true]
+            );
+
+            $validated['control_form_id'] = $controlForm->id;
+            $validated['control_form'] = $controlForm->name;
+        }
+
+        $validated['sort_order'] = $this->nextSortOrder($rpdProgram, $validated['parent_id']);
+        $validated['is_final_work'] = $validated['type'] === 'final_work';
 
         $rpdProgram->curriculumItems()->create($validated);
+
+        $this->renumberProgram($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
@@ -42,16 +101,29 @@ class RpdCurriculumItemController extends Controller
         abort_unless($curriculumItem->rpd_program_id === $rpdProgram->id, 404);
 
         $validated = $request->validate([
-            'number' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'total_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
+            'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
-            'is_final_work' => ['nullable', 'boolean'],
         ]);
 
-        $validated['is_final_work'] = $request->boolean('is_final_work');
+        if (! empty($validated['control_form_id'])) {
+            $controlForm = RpdControlForm::find($validated['control_form_id']);
+            $validated['control_form'] = $controlForm?->name;
+        } elseif (! empty($validated['control_form'])) {
+            $controlForm = RpdControlForm::query()->firstOrCreate(
+                ['name' => trim($validated['control_form'])],
+                ['is_default' => false, 'is_active' => true]
+            );
+
+            $validated['control_form_id'] = $controlForm->id;
+            $validated['control_form'] = $controlForm->name;
+        } else {
+            $validated['control_form_id'] = null;
+            $validated['control_form'] = null;
+        }
 
         $curriculumItem->update($validated);
 
@@ -66,8 +138,62 @@ class RpdCurriculumItemController extends Controller
 
         $curriculumItem->delete();
 
+        $this->renumberProgram($rpdProgram);
+
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
             ->with('success', 'Строка учебного плана удалена.');
+    }
+
+    private function makeSectionNumber(RpdProgram $rpdProgram): string
+    {
+        $count = $rpdProgram->curriculumItems()
+            ->where('type', 'section')
+            ->whereNull('parent_id')
+            ->count();
+
+        return (string) ($count + 1);
+    }
+
+    private function makeTopicNumber(RpdCurriculumItem $parent): string
+    {
+        $count = $parent->children()
+            ->where('type', 'topic')
+            ->count();
+
+        return $parent->number . '.' . ($count + 1);
+    }
+
+    private function nextSortOrder(RpdProgram $rpdProgram, ?int $parentId): int
+    {
+        return (int) $rpdProgram->curriculumItems()
+            ->where('parent_id', $parentId)
+            ->max('sort_order') + 1;
+    }
+
+    private function renumberProgram(RpdProgram $rpdProgram): void
+    {
+        $sections = $rpdProgram->curriculumItems()
+            ->where('type', 'section')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
+
+        foreach ($sections as $sectionIndex => $section) {
+            $section->update([
+                'number' => (string) ($sectionIndex + 1),
+            ]);
+
+            $topics = $section->children()
+                ->where('type', 'topic')
+                ->orderBy('sort_order')
+                ->get();
+
+            foreach ($topics as $topicIndex => $topic) {
+                $topic->update([
+                    'number' => $section->number . '.' . ($topicIndex + 1),
+                ]);
+            }
+        }
     }
 }
