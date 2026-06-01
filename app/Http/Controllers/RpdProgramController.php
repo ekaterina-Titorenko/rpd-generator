@@ -296,6 +296,18 @@ class RpdProgramController extends Controller
             }
         }
 
+        if (blank($rpdProgram->control_survey_materials)) {
+            $errors[] = 'Не заполнены материалы для проведения контрольных опросов.';
+        }
+
+        if (blank($rpdProgram->final_practical_work_materials)) {
+            $errors[] = 'Не заполнены материалы для проведения итоговой практической работы.';
+        }
+
+        if (blank($rpdProgram->project_topics)) {
+            $errors[] = 'Не заполнены типовые темы проектных работ.';
+        }
+
         return $errors;
     }
 
