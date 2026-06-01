@@ -48,3 +48,36 @@ document.addEventListener('DOMContentLoaded', () => {
     reviewTextarea.addEventListener('input', syncReviewComment);
     syncReviewComment();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const autosubmitTimers = new Map();
+
+    document.querySelectorAll('[data-autosubmit]').forEach((field) => {
+        const eventName = field.matches('input[type="number"], select')
+            ? 'change'
+            : 'input';
+
+        field.addEventListener(eventName, () => {
+            const formId = field.getAttribute('form');
+            const form = formId
+                ? document.getElementById(formId)
+                : field.closest('form');
+
+            if (!form) {
+                return;
+            }
+
+            clearTimeout(autosubmitTimers.get(form));
+
+            const delay = eventName === 'input' ? 900 : 150;
+
+            autosubmitTimers.set(form, setTimeout(() => {
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            }, delay));
+        });
+    });
+});

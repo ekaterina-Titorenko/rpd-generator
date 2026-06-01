@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RpdCurriculumItemController;
 use App\Http\Controllers\RpdProgramController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RpdContentSectionController;
+
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -48,6 +50,15 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'destroy'])
                 ->name('curriculum.destroy');
+
+            Route::get('content', [RpdContentSectionController::class, 'index'])
+                ->name('content.index');
+
+            Route::post('content/sync', [RpdContentSectionController::class, 'sync'])
+                ->name('content.sync');
+
+            Route::put('content/{contentSection}', [RpdContentSectionController::class, 'update'])
+                ->name('content.update');
         });
 });
 

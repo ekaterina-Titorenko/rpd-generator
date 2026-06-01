@@ -118,7 +118,7 @@
     </div>
 
     <div class="card-body document-section">
-        
+
         <h3>Форма обучения</h3>
         <p>{{ $rpdProgram->education_form }}</p>
 
@@ -275,7 +275,14 @@
                 Содержательное описание разделов программы.
             </p>
         </div>
+
+        <div class="actions">
+            <a href="{{ route('rpd-programs.content.index', $rpdProgram) }}" class="btn btn-secondary">
+                Редактировать содержание
+            </a>
+        </div>
     </div>
+
 
     <div class="card-body">
         @if ($rpdProgram->contentSections->isEmpty())
