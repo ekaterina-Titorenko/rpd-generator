@@ -11,14 +11,33 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::table('rpd_curriculum_items', function (Blueprint $table) {
+            $table->enum('type', [
+                'section',
+                'topic',
+                'final_work',
+            ])->default('topic')->after('rpd_program_id');
+
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->after('type')
+                ->constrained('rpd_curriculum_items')
+                ->nullOnDelete();
+
+            $table->foreignId('control_form_id')
+                ->nullable()
+                ->after('control_form')
+                ->constrained('rpd_control_forms')
+                ->nullOnDelete();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        //
+        Schema::table('rpd_curriculum_items', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('control_form_id');
+            $table->dropConstrainedForeignId('parent_id');
+            $table->dropColumn('type');
+        });
     }
 };
