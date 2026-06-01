@@ -38,7 +38,7 @@ class RpdProgramController extends Controller
             'education_format' => ['required', 'in:offline,online,mixed'],
             'lessons_per_week' => ['required', 'string', 'max:255'],
             'academic_hours_per_lesson' => ['required', 'integer', 'min:1', 'max:12'],
-            'academic_hour_minutes' => ['rаequired', 'integer', 'min:30', 'max:60'],
+            'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
         ]);
 
         $standardTexts = $this->makeStandardTexts($validated);
@@ -142,6 +142,15 @@ class RpdProgramController extends Controller
             403
         );
 
+
+        $errors = $this->validateBeforeSubmit($rpdProgram);
+
+        if (! empty($errors)) {
+            return back()
+                ->withErrors($errors);
+        }
+
+
         $rpdProgram->update([
             'status' => 'submitted',
             'review_comment' => null,
@@ -226,5 +235,61 @@ class RpdProgramController extends Controller
 
             'study_mode' => "Данная Программа рассчитана на освоение в течение {$data['study_period']} учащимися в возрасте {$data['students_age']}, не зависимо от пола, {$data['lessons_per_week']} в неделю по {$data['academic_hours_per_lesson']} академических часа. Академический час для обучающихся равен {$data['academic_hour_minutes']} минутам.\n\nТиповой режим занятий:\nПо будням с 16:00 до 17:30, с 17:45 до 19:15. При необходимости могут назначаться дополнительные временные интервалы занятий при соблюдении общего режима обучения.",
         ];
+    }
+
+    private function validateBeforeSubmit(RpdProgram $rpdProgram): array
+    {
+        $rpdProgram->load('curriculumItems.children');
+
+        $errors = [];
+
+        $curriculumItems = $rpdProgram->curriculumItems;
+
+        if ($curriculumItems->isEmpty()) {
+            $errors[] = 'Учебный план не заполнен.';
+        }
+
+        $sections = $curriculumItems->where('type', 'section');
+
+        if ($sections->isEmpty()) {
+            $errors[] = 'В учебном плане должен быть хотя бы один раздел.';
+        }
+
+        $sectionTotalHours = (int) $sections->sum('total_hours');
+
+        if ($sectionTotalHours !== (int) $rpdProgram->total_hours) {
+            $errors[] = "Сумма часов по разделам ({$sectionTotalHours}) не совпадает с объемом программы ({$rpdProgram->total_hours}).";
+        }
+
+        foreach ($curriculumItems as $item) {
+            $calculatedTotal = (int) $item->theory_hours + (int) $item->practice_hours;
+
+            if ((int) $item->total_hours !== $calculatedTotal) {
+                $errors[] = "В строке «{$item->title}» часы не сходятся: всего {$item->total_hours}, теория + практика = {$calculatedTotal}.";
+            }
+        }
+
+        foreach ($sections as $section) {
+            $children = $section->children;
+
+            if ($children->isEmpty()) {
+                $errors[] = "В разделе «{$section->title}» нет тем.";
+                continue;
+            }
+
+            $childrenTotal = (int) $children->sum('total_hours');
+            $childrenTheory = (int) $children->sum('theory_hours');
+            $childrenPractice = (int) $children->sum('practice_hours');
+
+            if (
+                (int) $section->total_hours !== $childrenTotal
+                || (int) $section->theory_hours !== $childrenTheory
+                || (int) $section->practice_hours !== $childrenPractice
+            ) {
+                $errors[] = "В разделе «{$section->title}» часы раздела не совпадают с суммой тем.";
+            }
+        }
+
+        return $errors;
     }
 }
