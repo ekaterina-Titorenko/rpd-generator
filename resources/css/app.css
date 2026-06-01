@@ -441,12 +441,13 @@ a {
     display: grid;
     grid-template-columns:
         minmax(130px, 150px)
-        minmax(260px, 1fr)
-        minmax(110px, 130px)
-        minmax(110px, 130px)
+        minmax(220px, 300px)
+        minmax(240px, 1fr)
+        minmax(100px, 120px)
+        minmax(100px, 120px)
         minmax(180px, 240px)
-        minmax(120px, 140px);
-    gap: 18px;
+        140px;
+    gap: 16px;
     align-items: end;
 }
 
@@ -462,7 +463,11 @@ a {
     display: flex;
     justify-content: flex-end;
     align-items: flex-end;
-    padding-left: 10px;
+    padding-left: 0;
+}
+
+.curriculum-add-actions .btn {
+    width: 100%;
 }
 
 .curriculum-add-form .form-field {
@@ -477,6 +482,16 @@ a {
 
 .table-scroll {
     overflow-x: auto;
+}
+
+.curriculum-add-form:not(.has-topic-parent) {
+    grid-template-columns:
+        minmax(130px, 150px)
+        minmax(280px, 1fr)
+        minmax(100px, 120px)
+        minmax(100px, 120px)
+        minmax(180px, 240px)
+        140px;
 }
 
 .curriculum-table {

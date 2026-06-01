@@ -76,9 +76,15 @@
             </select>
         </div>
 
-        <div class="form-field curriculum-parent-field" data-topic-parent-field>
+        <div
+            class="form-field curriculum-parent-field"
+            data-topic-parent-field
+            @hidden(old('type', 'section' ) !=='topic' )>
             <label for="parent_id">Раздел для темы *</label>
-            <select id="parent_id" name="parent_id">
+            <select
+                id="parent_id"
+                name="parent_id"
+                @disabled(old('type', 'section' ) !=='topic' )>
                 <option value="">Выберите раздел</option>
                 @foreach ($sections as $section)
                 <option value="{{ $section->id }}" @selected((int) old('parent_id')===$section->id)>

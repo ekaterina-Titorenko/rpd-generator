@@ -10,8 +10,9 @@ use Illuminate\Validation\Rule;
 
 class RpdCurriculumItemController extends Controller
 {
-    public function index(RpdProgram $rpdProgram)
+    public function index(Request $request, RpdProgram $rpdProgram)
     {
+        $this->authorizeProgramAccess($request, $rpdProgram);
         $rpdProgram->load([
             'curriculumItems.children',
             'curriculumItems.controlForm',
@@ -44,6 +45,8 @@ class RpdCurriculumItemController extends Controller
 
     public function store(Request $request, RpdProgram $rpdProgram)
     {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
         $validated = $request->validate([
             'type' => ['required', Rule::in(['section', 'topic', 'final_work'])],
             'parent_id' => ['nullable', 'integer', 'exists:rpd_curriculum_items,id'],
@@ -105,6 +108,8 @@ class RpdCurriculumItemController extends Controller
 
     public function update(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
     {
+
+        $this->authorizeProgramAccess($request, $rpdProgram);
         abort_unless($curriculumItem->rpd_program_id === $rpdProgram->id, 404);
 
         $validated = $request->validate([
@@ -142,6 +147,9 @@ class RpdCurriculumItemController extends Controller
 
     public function destroy(RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
     {
+
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
         abort_unless($curriculumItem->rpd_program_id === $rpdProgram->id, 404);
 
         if ($curriculumItem->type === 'section') {
@@ -206,5 +214,14 @@ class RpdCurriculumItemController extends Controller
                 ]);
             }
         }
+    }
+
+    private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void
+    {
+        if ($request->user()->role === 'admin') {
+            return;
+        }
+
+        abort_unless($rpdProgram->user_id === $request->user()->id, 403);
     }
 }

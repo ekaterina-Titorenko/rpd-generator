@@ -53,18 +53,24 @@ class RpdProgramController extends Controller
             ->with('success', 'РПД создана.');
     }
 
-    public function show(RpdProgram $rpdProgram)
+    public function show(Request $request, RpdProgram $rpdProgram)
     {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
         return view('rpd-programs.show', compact('rpdProgram'));
     }
 
-    public function edit(RpdProgram $rpdProgram)
+    public function edit(Request $request, RpdProgram $rpdProgram)
     {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
         return view('rpd-programs.edit', compact('rpdProgram'));
     }
 
     public function update(Request $request, RpdProgram $rpdProgram)
     {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+        
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'direction' => ['required', 'in:technical,science,social_humanitarian'],
@@ -90,5 +96,14 @@ class RpdProgramController extends Controller
         return redirect()
             ->route('rpd-programs.index')
             ->with('success', 'РПД удалена.');
+    }
+
+    private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void
+    {
+        if ($request->user()->role === 'admin') {
+            return;
+        }
+
+        abort_unless($rpdProgram->user_id === $request->user()->id, 403);
     }
 }
