@@ -30,3 +30,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toggleParentField();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const reviewTextarea = document.querySelector('#review_comment');
+    const reviewCopies = document.querySelectorAll('[data-review-comment-copy]');
+
+    if (!reviewTextarea || reviewCopies.length === 0) {
+        return;
+    }
+
+    const syncReviewComment = () => {
+        reviewCopies.forEach((input) => {
+            input.value = reviewTextarea.value;
+        });
+    };
+
+    reviewTextarea.addEventListener('input', syncReviewComment);
+    syncReviewComment();
+});

@@ -70,7 +70,7 @@ class RpdProgramController extends Controller
     public function update(Request $request, RpdProgram $rpdProgram)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
-        
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'direction' => ['required', 'in:technical,science,social_humanitarian'],
@@ -105,5 +105,85 @@ class RpdProgramController extends Controller
         }
 
         abort_unless($rpdProgram->user_id === $request->user()->id, 403);
+    }
+
+    public function submit(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless(
+            $request->user()->role === 'teacher'
+                && in_array($rpdProgram->status, ['draft', 'revision'], true),
+            403
+        );
+
+        $rpdProgram->update([
+            'status' => 'submitted',
+            'review_comment' => null,
+        ]);
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'РПД отправлена на проверку.');
+    }
+
+    public function returnForRevision(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $validated = $request->validate([
+            'review_comment' => ['required', 'string'],
+        ]);
+
+        $rpdProgram->update([
+            'status' => 'revision',
+            'review_comment' => $validated['review_comment'],
+        ]);
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'РПД возвращена на доработку.');
+    }
+
+    public function approve(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $validated = $request->validate([
+            'review_comment' => ['nullable', 'string'],
+        ]);
+
+        $rpdProgram->update([
+            'status' => 'approved',
+            'review_comment' => $validated['review_comment'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'РПД утверждена.');
+    }
+
+    public function reject(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $validated = $request->validate([
+            'review_comment' => ['required', 'string'],
+        ]);
+
+        $rpdProgram->update([
+            'status' => 'rejected',
+            'review_comment' => $validated['review_comment'],
+        ]);
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'РПД отклонена.');
     }
 }

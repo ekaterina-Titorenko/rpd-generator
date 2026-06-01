@@ -19,6 +19,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('rpd-programs', RpdProgramController::class);
+    Route::patch('rpd-programs/{rpdProgram}/submit', [RpdProgramController::class, 'submit'])
+        ->name('rpd-programs.submit');
+
+    Route::patch('rpd-programs/{rpdProgram}/return-for-revision', [RpdProgramController::class, 'returnForRevision'])
+        ->middleware('role:admin')
+        ->name('rpd-programs.return-for-revision');
+
+    Route::patch('rpd-programs/{rpdProgram}/approve', [RpdProgramController::class, 'approve'])
+        ->middleware('role:admin')
+        ->name('rpd-programs.approve');
+
+    Route::patch('rpd-programs/{rpdProgram}/reject', [RpdProgramController::class, 'reject'])
+        ->middleware('role:admin')
+        ->name('rpd-programs.reject');
 
     Route::prefix('rpd-programs/{rpdProgram}')
         ->name('rpd-programs.')
@@ -37,4 +51,4 @@ Route::middleware('auth')->group(function () {
         });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

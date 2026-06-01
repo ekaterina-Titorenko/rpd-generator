@@ -13,6 +13,7 @@
         <div class="actions">
             <a href="{{ route('rpd-programs.index') }}" class="btn btn-secondary">К списку</a>
             <a href="{{ route('rpd-programs.edit', $rpdProgram) }}" class="btn btn-primary">Редактировать</a>
+
             <form
                 method="POST"
                 action="{{ route('rpd-programs.destroy', $rpdProgram) }}"
@@ -70,7 +71,68 @@
             </div>
         </div>
     </div>
+
 </section>
+@if (auth()->user()->role === 'admin' && in_array($rpdProgram->status, ['draft', 'submitted', 'revision', 'approved'], true))
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Проверка администратором</h2>
+            <p class="card-description">
+                Укажите комментарий при возврате на доработку или отклонении. При утверждении комментарий необязателен.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="review-actions">
+            <div class="form-field form-field-wide">
+                <label for="review_comment">Комментарий администратора</label>
+                <textarea
+                    id="review_comment"
+                    name="review_comment"
+                    rows="4"
+                    form="approve-form"
+                    placeholder="Например: уточнить календарный график, исправить распределение часов, добавить литературу.">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+            </div>
+
+            <div class="review-buttons">
+                <form id="approve-form" method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <button type="submit" class="btn btn-primary">
+                        Утвердить
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+
+                    <button type="submit" class="btn btn-secondary">
+                        Вернуть на доработку
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ route('rpd-programs.reject', $rpdProgram) }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+
+                    <button type="submit" class="btn btn-danger">
+                        Отклонить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+
 
 <section class="card">
     <div class="card-header">
@@ -156,4 +218,45 @@
         </div>
     </div>
 </section>
+
+@if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Отправка на проверку</h2>
+            <p class="card-description">
+                После отправки администратор сможет проверить РПД, оставить комментарий и принять решение.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ route('rpd-programs.submit', $rpdProgram) }}">
+            @csrf
+            @method('PATCH')
+
+            <button type="submit" class="btn btn-primary">
+                Отправить на проверку
+            </button>
+        </form>
+    </div>
+</section>
+@endif
+
+@if ($rpdProgram->review_comment)
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Комментарий администратора</h2>
+            <p class="card-description">
+                Комментарий по результатам проверки РПД.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="review-comment">
+            {{ $rpdProgram->review_comment }}
+        </div>
+    </div>
+</section>
+@endif
 @endsection

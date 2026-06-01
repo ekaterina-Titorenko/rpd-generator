@@ -43,6 +43,7 @@ class RpdProgram extends Model
         'oral_control_criteria',
         'practical_work_criteria',
         'status',
+        'review_comment',
     ];
 
     protected $casts = [
@@ -73,6 +74,7 @@ class RpdProgram extends Model
             'submitted' => 'На проверке',
             'revision' => 'На доработке',
             'approved' => 'Утверждена',
+            'rejected' => 'Отклонена',
             'generated' => 'Документ сформирован',
             default => 'Неизвестно',
         };
