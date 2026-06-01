@@ -276,11 +276,6 @@ class RpdProgramController extends Controller
         foreach ($sections as $section) {
             $children = $section->children;
 
-            if ($children->isEmpty()) {
-                $errors[] = "В разделе «{$section->title}» нет тем.";
-                continue;
-            }
-
             $childrenTotal = (int) $children->sum('total_hours');
             $childrenTheory = (int) $children->sum('theory_hours');
             $childrenPractice = (int) $children->sum('practice_hours');
@@ -307,7 +302,7 @@ class RpdProgramController extends Controller
                 $errors[] = "Не заполнено содержание раздела «{$section->title}».";
             }
         }
-        
+
         return $errors;
     }
 
