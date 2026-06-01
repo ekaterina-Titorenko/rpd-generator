@@ -103,7 +103,14 @@
                 value="{{ old('students_age', '14–18 лет') }}"
                 required>
         </div>
-
+        <div class="form-field">
+            <label for="education_format">Формат обучения *</label>
+            <select id="education_format" name="education_format" required>
+                <option value="mixed" @selected(old('education_format', 'mixed' )==='mixed' )>Очный и дистанционный</option>
+                <option value="offline" @selected(old('education_format')==='offline' )>Очный</option>
+                <option value="online" @selected(old('education_format')==='online' )>Дистанционный</option>
+            </select>
+        </div>
     </div>
 </form>
 @endsection

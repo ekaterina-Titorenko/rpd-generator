@@ -35,14 +35,15 @@ class RpdProgramController extends Controller
             'total_hours' => ['required', 'integer', 'min:1', 'max:1000'],
             'study_period' => ['required', 'string', 'max:255'],
             'students_age' => ['required', 'string', 'max:255'],
+            'education_format' => ['required', 'in:offline,online,mixed'],
         ]);
+
+        $standardTexts = $this->makeStandardTexts($validated);
 
         $program = RpdProgram::create(array_merge($validated, [
             'user_id' => $request->user()->id,
-            'education_form' => 'Занятия проводятся в очном и дистанционном формате с использованием Личного кабинета школьника/абитуриента на сайте Приёмной комиссии РТУ МИРЭА.',
-
-            'study_mode' => "Данная Программа рассчитана на освоение в течение 1-го года учащимися в возрасте от 14 до 18 лет, не зависимо от пола, 1-2 раза в неделю по 2 академических часа. Академический час для обучающихся равен 45 минутам.\n\nТиповой режим занятий:\nПо будням с 16:00 до 17:30, с 17:45 до 19:15. При необходимости могут назначаться дополнительные временные интервалы занятий при соблюдении общего режима обучения.",
-
+            'education_form' => $standardTexts['education_form'],
+            'study_mode' => $standardTexts['study_mode'],
             'students_category' => 'Программа предназначена для учащихся, имеющих интерес к содержанию программы и учащихся, мотивированных на участие в региональных и всероссийских соревнованиях и конкурсах.',
 
             'preparation_requirements' => "К освоению дополнительной общеобразовательной программы допускаются слушатели, обладающие следующими компетенциями:\n· базовыми навыками работы с персональным компьютером и современными информационными технологиями;\n· развитыми логическими способностями и аналитическим мышлением;\n· фундаментальными знаниями по общеобразовательным предметам в соответствии с программой основного общего образования;\n· умением самостоятельно работать с учебной информацией и осваивать новые знания.\nОсобые требования к предварительной подготовке отсутствуют. Программа построена таким образом, чтобы быть доступной для слушателей с различным уровнем начальной подготовки при условии наличия вышеуказанных базовых компетенций.",
@@ -95,9 +96,12 @@ class RpdProgramController extends Controller
             'total_hours' => ['required', 'integer', 'min:1', 'max:1000'],
             'study_period' => ['required', 'string', 'max:255'],
             'students_age' => ['required', 'string', 'max:255'],
-        ]);
+            'education_format' => ['required', 'in:offline,online,mixed'],
 
-        $rpdProgram->update($validated);
+        ]);
+        $standardTexts = $this->makeStandardTexts($validated);
+
+        $rpdProgram->update(array_merge($validated, $standardTexts));
 
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
@@ -200,5 +204,21 @@ class RpdProgramController extends Controller
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
             ->with('success', 'РПД отклонена.');
+    }
+
+    private function makeStandardTexts(array $data): array
+    {
+        $formatText = match ($data['education_format']) {
+            'offline' => 'очном формате',
+            'online' => 'дистанционном формате',
+            'mixed' => 'очном и дистанционном формате',
+            default => 'очном и дистанционном формате',
+        };
+
+        return [
+            'education_form' => "Занятия проводятся в {$formatText} с использованием Личного кабинета школьника/абитуриента на сайте Приёмной комиссии РТУ МИРЭА.",
+
+            'study_mode' => "Данная Программа рассчитана на освоение в течение {$data['study_period']} учащимися в возрасте {$data['students_age']}, не зависимо от пола, 1-2 раза в неделю по 2 академических часа. Академический час для обучающихся равен 45 минутам.\n\nТиповой режим занятий:\nПо будням с 16:00 до 17:30, с 17:45 до 19:15. При необходимости могут назначаться дополнительные временные интервалы занятий при соблюдении общего режима обучения.",
+        ];
     }
 }

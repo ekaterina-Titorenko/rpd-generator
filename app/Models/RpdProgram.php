@@ -44,6 +44,7 @@ class RpdProgram extends Model
         'practical_work_criteria',
         'status',
         'review_comment',
+        'education_format',
     ];
 
     protected $casts = [
@@ -113,5 +114,15 @@ class RpdProgram extends Model
     public function authors(): HasMany
     {
         return $this->hasMany(RpdAuthor::class)->orderBy('sort_order');
+    }
+
+    public function getEducationFormatLabelAttribute(): string
+    {
+        return match ($this->education_format) {
+            'offline' => 'очная',
+            'online' => 'дистанционная',
+            'mixed' => 'очная и дистанционная',
+            default => 'очная и дистанционная',
+        };
     }
 }
