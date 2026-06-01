@@ -13,6 +13,12 @@ class RpdResource extends Model
         'title',
         'url',
         'sort_order',
+        'source_type',
+        'metadata',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
     ];
 
     public function program(): BelongsTo
@@ -26,6 +32,17 @@ class RpdResource extends Model
             'main_recommended' => 'Список основной рекомендуемой литературы',
             'additional' => 'Дополнительная литература',
             'internet' => 'Ресурсы информационно-телекоммуникационной сети Интернет',
+            default => 'Источник',
+        };
+    }
+
+    public function getSourceTypeLabelAttribute(): string
+    {
+        return match ($this->source_type) {
+            'book' => 'Книга',
+            'article' => 'Статья',
+            'electronic' => 'Электронный ресурс',
+            'legal' => 'Нормативный документ',
             default => 'Источник',
         };
     }

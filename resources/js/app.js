@@ -81,3 +81,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const sourceTypeSelect = document.querySelector('[data-source-type-select]');
+    const sourceFields = document.querySelectorAll('[data-source-field]');
+
+    if (!sourceTypeSelect || sourceFields.length === 0) {
+        return;
+    }
+
+    const toggleSourceFields = () => {
+        const selectedType = sourceTypeSelect.value;
+
+        sourceFields.forEach((field) => {
+            const allowedTypes = field.dataset.sourceField.split(' ');
+            const isVisible = allowedTypes.includes(selectedType);
+
+            field.hidden = !isVisible;
+
+            field.querySelectorAll('input, textarea, select').forEach((input) => {
+                input.disabled = !isVisible;
+            });
+        });
+    };
+
+    sourceTypeSelect.addEventListener('change', toggleSourceFields);
+    toggleSourceFields();
+});
