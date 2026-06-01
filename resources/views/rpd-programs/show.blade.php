@@ -75,23 +75,84 @@
 <section class="card">
     <div class="card-header">
         <div>
-            <h2 class="card-title">Следующие разделы</h2>
+            <h2 class="card-title">Разделы конструктора</h2>
             <p class="card-description">
-                Эти блоки будут заполняться на следующих этапах конструктора.
+                Заполняйте РПД по шагам. Сначала общие сведения, затем учебный план, график, содержание и материалы.
             </p>
         </div>
     </div>
 
-    <div class="card-body">
-        <div class="steps-list">
-            <div class="step-item">1. Комплекс основных характеристик</div>
-            <div class="step-item">2. Учебный план</div>
-            <div class="step-item">3. Календарный учебный график</div>
-            <div class="step-item">4. Содержание учебного плана</div>
-            <div class="step-item">5. Оценочные материалы</div>
-            <div class="step-item">6. Литература и интернет-ресурсы</div>
-            <div class="step-item">7. Разработчики</div>
-            <div class="step-item">8. Проверка и генерация DOCX</div>
+    <div class="card-body constructor-grid">
+        <a href="{{ route('rpd-programs.edit', $rpdProgram) }}" class="constructor-card">
+            <div class="constructor-number">1</div>
+            <div>
+                <strong>Общие сведения</strong>
+                <span>Название, направленность, часы, срок освоения.</span>
+            </div>
+        </a>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">2</div>
+            <div>
+                <strong>Комплекс основных характеристик</strong>
+                <span>Актуальность, цель, задачи, результаты, компетенции.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">3</div>
+            <div>
+                <strong>Учебный план</strong>
+                <span>Разделы, темы, теория, практика, формы контроля.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">4</div>
+            <div>
+                <strong>Календарный график</strong>
+                <span>Распределение теории и практики по неделям.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">5</div>
+            <div>
+                <strong>Содержание учебного плана</strong>
+                <span>Описание содержания по каждому разделу.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">6</div>
+            <div>
+                <strong>Оценочные материалы</strong>
+                <span>Вопросы, практические работы, критерии оценивания.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">7</div>
+            <div>
+                <strong>Литература и ресурсы</strong>
+                <span>Основная, дополнительная литература и интернет-ресурсы.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">8</div>
+            <div>
+                <strong>Разработчики</strong>
+                <span>Должности и ФИО авторов программы.</span>
+            </div>
+        </div>
+
+        <div class="constructor-card constructor-card-disabled">
+            <div class="constructor-number">9</div>
+            <div>
+                <strong>Проверка и генерация</strong>
+                <span>Контроль заполнения и формирование DOCX.</span>
+            </div>
         </div>
     </div>
 </section>
