@@ -54,6 +54,26 @@ class RpdProgram extends Model
         'competency_criteria' => 'array',
     ];
 
+    public function getDirectionLabelAttribute(): string
+    {
+        return match ($this->direction) {
+            'technical' => 'Техническая',
+            'science' => 'Естественно-научная',
+            'social_humanitarian' => 'Социально-гуманитарная',
+            default => 'Не указана',
+        };
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Черновик',
+            'ready' => 'Готова к генерации',
+            'generated' => 'Документ сформирован',
+            default => 'Неизвестно',
+        };
+    }
+
     public function curriculumItems(): HasMany
     {
         return $this->hasMany(RpdCurriculumItem::class)->orderBy('sort_order');

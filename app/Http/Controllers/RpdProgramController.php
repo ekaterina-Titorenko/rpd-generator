@@ -7,57 +7,40 @@ use Illuminate\Http\Request;
 
 class RpdProgramController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $programs = RpdProgram::query()
+            ->latest()
+            ->get();
+
+        return view('rpd-programs.index', compact('programs'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('rpd-programs.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(RpdProgram $rpdProgram)
     {
-        //
+        return view('rpd-programs.show', compact('rpdProgram'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(RpdProgram $rpdProgram)
     {
-        //
+        return view('rpd-programs.edit', compact('rpdProgram'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, RpdProgram $rpdProgram)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(RpdProgram $rpdProgram)
     {
         //
