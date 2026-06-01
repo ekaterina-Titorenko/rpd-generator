@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('rpd_control_forms', function (Blueprint $table) {
             $table->id();
+
+            $table->string('name')->unique();
+            $table->boolean('is_default')->default(false);
+            $table->boolean('is_active')->default(true);
+
             $table->timestamps();
         });
     }
