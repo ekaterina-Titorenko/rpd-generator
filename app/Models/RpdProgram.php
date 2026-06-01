@@ -48,6 +48,9 @@ class RpdProgram extends Model
         'lessons_per_week',
         'academic_hours_per_lesson',
         'academic_hour_minutes',
+        'control_survey_materials',
+        'final_practical_work_materials',
+        'project_topics',
     ];
 
     protected $casts = [
@@ -102,11 +105,6 @@ class RpdProgram extends Model
     public function contentSections(): HasMany
     {
         return $this->hasMany(RpdContentSection::class)->orderBy('sort_order');
-    }
-
-    public function assessmentItems(): HasMany
-    {
-        return $this->hasMany(RpdAssessmentItem::class)->orderBy('sort_order');
     }
 
     public function resources(): HasMany

@@ -70,7 +70,6 @@ class RpdProgramController extends Controller
             'curriculumItems.controlForm',
             'authors',
             'resources',
-            'assessmentItems',
             'contentSections' => fn($query) => $query
                 ->whereNotNull('rpd_curriculum_item_id')
                 ->orderBy('sort_order'),

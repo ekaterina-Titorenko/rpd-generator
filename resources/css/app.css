@@ -793,3 +793,34 @@ a {
     margin: 4px 0 0;
     color: var(--muted);
 }
+
+.assessment-blocks {
+    display: grid;
+    gap: 16px;
+}
+
+.assessment-block {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface-muted);
+}
+
+.assessment-block-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.assessment-block-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.assessment-block-header p {
+    margin: 4px 0 0;
+    color: var(--muted);
+}

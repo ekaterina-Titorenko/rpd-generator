@@ -5,6 +5,7 @@ use App\Http\Controllers\RpdCurriculumItemController;
 use App\Http\Controllers\RpdProgramController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RpdContentSectionController;
+use App\Http\Controllers\RpdAssessmentItemController;
 
 
 Route::get('/', function () {
@@ -59,6 +60,12 @@ Route::middleware('auth')->group(function () {
 
             Route::put('content/{contentSection}', [RpdContentSectionController::class, 'update'])
                 ->name('content.update');
+
+            Route::get('assessment', [RpdAssessmentItemController::class, 'index'])
+                ->name('assessment.index');
+
+            Route::put('assessment', [RpdAssessmentItemController::class, 'update'])
+                ->name('assessment.update');
         });
 });
 

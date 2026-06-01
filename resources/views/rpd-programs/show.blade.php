@@ -301,6 +301,47 @@
     </div>
 </section>
 
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">5. Оценочные материалы</h2>
+            <p class="card-description">
+                Материалы для текущего и итогового контроля.
+            </p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ route('rpd-programs.assessment.index', $rpdProgram) }}" class="btn btn-secondary">
+                Редактировать оценочные материалы
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if (
+            blank($rpdProgram->control_survey_materials)
+            && blank($rpdProgram->final_practical_work_materials)
+            && blank($rpdProgram->project_topics)
+        )
+            <div class="empty-state">
+                <h2>Оценочные материалы пока не заполнены</h2>
+                <p>Заполните материалы для опросов, итоговой практической работы и темы проектов.</p>
+            </div>
+        @else
+            <div class="document-section">
+                <h3>Материалы для проведения контрольных опросов</h3>
+                <p>{{ $rpdProgram->control_survey_materials ?: 'Не заполнено' }}</p>
+
+                <h3>Материалы для проведения итоговой практической работы</h3>
+                <p>{{ $rpdProgram->final_practical_work_materials ?: 'Не заполнено' }}</p>
+
+                <h3>Типовые темы проектных работ</h3>
+                <p>{{ $rpdProgram->project_topics ?: 'Не заполнено' }}</p>
+            </div>
+        @endif
+    </div>
+</section>
+
 @if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
 <section class="card">
     <div class="card-header">
