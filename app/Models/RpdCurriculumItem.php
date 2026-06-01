@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RpdCurriculumItem extends Model
 {
@@ -55,5 +56,10 @@ class RpdCurriculumItem extends Model
             'final_work' => 'Итоговая работа',
             default => 'Строка',
         };
+    }
+
+    public function contentSection(): HasOne
+    {
+        return $this->hasOne(RpdContentSection::class, 'rpd_curriculum_item_id');
     }
 }

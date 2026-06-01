@@ -12,7 +12,12 @@ class RpdContentSectionController extends Controller
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
-        $rpdProgram->load(['contentSections', 'curriculumItems']);
+        $rpdProgram->load([
+            'contentSections' => fn($query) => $query
+                ->whereNotNull('rpd_curriculum_item_id')
+                ->orderBy('sort_order'),
+            'curriculumItems',
+        ]);
 
         return view('rpd-programs.content.index', compact('rpdProgram'));
     }
@@ -27,17 +32,25 @@ class RpdContentSectionController extends Controller
             ->get();
 
         foreach ($sections as $section) {
-            $rpdProgram->contentSections()->firstOrCreate(
+            $rpdProgram->contentSections()->updateOrCreate(
+                [
+                    'rpd_curriculum_item_id' => $section->id,
+                ],
                 [
                     'number' => $section->number,
                     'title' => $section->title,
-                ],
-                [
-                    'content' => null,
                     'sort_order' => $section->sort_order,
                 ]
             );
         }
+
+        $rpdProgram->contentSections()
+            ->whereNull('rpd_curriculum_item_id')
+            ->delete();
+
+        $rpdProgram->contentSections()
+            ->whereNotIn('rpd_curriculum_item_id', $sections->pluck('id'))
+            ->delete();
 
         return redirect()
             ->route('rpd-programs.content.index', $rpdProgram)

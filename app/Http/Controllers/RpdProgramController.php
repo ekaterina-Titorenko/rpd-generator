@@ -71,7 +71,9 @@ class RpdProgramController extends Controller
             'authors',
             'resources',
             'assessmentItems',
-            'contentSections',
+            'contentSections' => fn($query) => $query
+                ->whereNotNull('rpd_curriculum_item_id')
+                ->orderBy('sort_order'),
         ]);
 
         $curriculumItems = $rpdProgram->curriculumItems()
@@ -279,12 +281,11 @@ class RpdProgramController extends Controller
             $childrenTotal = (int) $children->sum('total_hours');
             $childrenTheory = (int) $children->sum('theory_hours');
             $childrenPractice = (int) $children->sum('practice_hours');
-
         }
 
         foreach ($sections as $section) {
             $contentSection = $rpdProgram->contentSections
-                ->firstWhere('number', $section->number);
+                ->firstWhere('rpd_curriculum_item_id', $section->id);
 
             if (! $contentSection) {
                 $errors[] = "Для раздела «{$section->title}» не создано содержание. Синхронизируйте содержание с учебным планом.";

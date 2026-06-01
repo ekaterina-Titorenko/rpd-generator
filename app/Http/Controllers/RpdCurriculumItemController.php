@@ -7,6 +7,7 @@ use App\Models\RpdCurriculumItem;
 use App\Models\RpdProgram;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\RpdContentSection;
 
 class RpdCurriculumItemController extends Controller
 {
@@ -97,9 +98,10 @@ class RpdCurriculumItemController extends Controller
         $validated['sort_order'] = $this->nextSortOrder($rpdProgram, $validated['parent_id']);
         $validated['is_final_work'] = $validated['type'] === 'final_work';
 
-        $rpdProgram->curriculumItems()->create($validated);
+        $curriculumItem = $rpdProgram->curriculumItems()->create($validated);
 
         $this->renumberProgram($rpdProgram);
+        $this->syncContentSections($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
@@ -139,13 +141,14 @@ class RpdCurriculumItemController extends Controller
         }
 
         $curriculumItem->update($validated);
+        $this->syncContentSections($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
             ->with('success', 'Строка учебного плана обновлена.');
     }
 
-    public function destroy(RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
+    public function destroy(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
     {
 
         $this->authorizeProgramAccess($request, $rpdProgram);
@@ -159,6 +162,7 @@ class RpdCurriculumItemController extends Controller
         $curriculumItem->delete();
 
         $this->renumberProgram($rpdProgram);
+        $this->syncContentSections($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
@@ -223,5 +227,37 @@ class RpdCurriculumItemController extends Controller
         }
 
         abort_unless($rpdProgram->user_id === $request->user()->id, 403);
+    }
+
+    private function syncContentSections(RpdProgram $rpdProgram): void
+    {
+        $sections = $rpdProgram->curriculumItems()
+            ->where('type', 'section')
+            ->orderBy('sort_order')
+            ->get();
+
+        foreach ($sections as $section) {
+            $rpdProgram->contentSections()->updateOrCreate(
+                [
+                    'rpd_curriculum_item_id' => $section->id,
+                ],
+                [
+                    'number' => $section->number,
+                    'title' => $section->title,
+                    'sort_order' => $section->sort_order,
+                ]
+            );
+        }
+
+        $sectionIds = $sections->pluck('id');
+
+        $rpdProgram->contentSections()
+            ->whereNotNull('rpd_curriculum_item_id')
+            ->whereNotIn('rpd_curriculum_item_id', $sectionIds)
+            ->delete();
+
+        $rpdProgram->contentSections()
+            ->whereNull('rpd_curriculum_item_id')
+            ->delete();
     }
 }
