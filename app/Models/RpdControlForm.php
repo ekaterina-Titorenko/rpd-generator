@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RpdControlForm extends Model
 {
@@ -16,4 +17,9 @@ class RpdControlForm extends Model
         'is_default' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    public function curriculumItems(): HasMany
+    {
+        return $this->hasMany(RpdCurriculumItem::class, 'control_form_id');
+    }
 }

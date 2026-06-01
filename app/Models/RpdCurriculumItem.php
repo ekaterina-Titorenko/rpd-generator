@@ -46,4 +46,14 @@ class RpdCurriculumItem extends Model
     {
         return $this->belongsTo(RpdControlForm::class, 'control_form_id');
     }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return match ($this->type) {
+            'section' => 'Раздел',
+            'topic' => 'Тема',
+            'final_work' => 'Итоговая работа',
+            default => 'Строка',
+        };
+    }
 }
