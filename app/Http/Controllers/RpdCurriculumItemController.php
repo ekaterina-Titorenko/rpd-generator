@@ -57,6 +57,12 @@ class RpdCurriculumItemController extends Controller
         $validated['total_hours'] = (int) $validated['theory_hours'] + (int) $validated['practice_hours'];
 
         if ($validated['type'] === 'topic') {
+            if (empty($validated['parent_id'])) {
+                return back()
+                    ->withErrors(['parent_id' => 'Для темы необходимо выбрать родительский раздел.'])
+                    ->withInput();
+            }
+
             $parent = $rpdProgram->curriculumItems()
                 ->where('type', 'section')
                 ->findOrFail($validated['parent_id']);

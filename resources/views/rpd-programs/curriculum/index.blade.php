@@ -76,10 +76,10 @@
             </select>
         </div>
 
-        <div class="form-field">
-            <label for="parent_id">Раздел для темы</label>
+        <div class="form-field curriculum-parent-field" data-topic-parent-field>
+            <label for="parent_id">Раздел для темы *</label>
             <select id="parent_id" name="parent_id">
-                <option value="">Не требуется</option>
+                <option value="">Выберите раздел</option>
                 @foreach ($sections as $section)
                 <option value="{{ $section->id }}" @selected((int) old('parent_id')===$section->id)>
                     {{ $section->number }}. {{ $section->title }}

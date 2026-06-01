@@ -524,14 +524,13 @@ a {
 }
 
 @media (max-width: 1180px) {
-    .compact-form,
-    .editable-row {
+    .curriculum-add-form {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .compact-form-actions,
-    .editable-row-actions {
+    .curriculum-add-actions {
         justify-content: flex-start;
+        padding-left: 0;
     }
 }
 
@@ -619,8 +618,14 @@ a {
 
 .curriculum-add-form {
     display: grid;
-    grid-template-columns: 140px 220px minmax(240px, 1fr) 90px 90px 90px 220px auto;
-    gap: 12px;
+    grid-template-columns:
+        minmax(130px, 150px)
+        minmax(260px, 1fr)
+        minmax(110px, 130px)
+        minmax(110px, 130px)
+        minmax(180px, 240px)
+        minmax(120px, 140px);
+    gap: 18px;
     align-items: end;
 }
 
@@ -631,6 +636,27 @@ a {
 .curriculum-add-actions {
     display: flex;
     justify-content: flex-end;
+    align-items: flex-end;
+    padding-left: 10px;
+    justify-content: flex-end;
+}
+
+.curriculum-add-form [data-topic-parent-field]:not([hidden]) {
+    grid-column: span 1;
+}
+
+.curriculum-add-form .curriculum-title-field {
+    grid-column: span 1;
+}
+
+.curriculum-add-form .form-field {
+    min-width: 0;
+}
+
+.curriculum-add-form input,
+.curriculum-add-form select,
+.curriculum-add-form textarea {
+    min-width: 0;
 }
 
 @media (max-width: 1180px) {
@@ -725,4 +751,17 @@ a {
 
 .table-actions-inline {
     justify-content: center;
+}
+
+.field-hint {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+[hidden] {
+    display: none !important;
+}
+
+.curriculum-parent-field {
+    min-width: 220px;
 }

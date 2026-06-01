@@ -45,3 +45,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const typeSelect = document.querySelector('#type');
+    const parentField = document.querySelector('[data-topic-parent-field]');
+    const parentSelect = document.querySelector('#parent_id');
+
+    if (!typeSelect || !parentField || !parentSelect) {
+        return;
+    }
+
+    const toggleParentField = () => {
+        const isTopic = typeSelect.value === 'topic';
+
+        parentField.hidden = !isTopic;
+        parentSelect.disabled = !isTopic;
+
+        if (!isTopic) {
+            parentSelect.value = '';
+        }
+    };
+
+    typeSelect.addEventListener('change', toggleParentField);
+
+    toggleParentField();
+});
