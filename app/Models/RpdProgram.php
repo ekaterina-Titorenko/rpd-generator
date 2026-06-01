@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RpdProgram extends Model
 {
     protected $fillable = [
+        'user_id',
         'title',
         'direction',
         'complexity_level',
@@ -72,6 +74,11 @@ class RpdProgram extends Model
             'generated' => 'Документ сформирован',
             default => 'Неизвестно',
         };
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function curriculumItems(): HasMany
