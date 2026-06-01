@@ -280,13 +280,6 @@ class RpdProgramController extends Controller
             $childrenTheory = (int) $children->sum('theory_hours');
             $childrenPractice = (int) $children->sum('practice_hours');
 
-            if (
-                (int) $section->total_hours !== $childrenTotal
-                || (int) $section->theory_hours !== $childrenTheory
-                || (int) $section->practice_hours !== $childrenPractice
-            ) {
-                $errors[] = "В разделе «{$section->title}» часы раздела не совпадают с суммой тем.";
-            }
         }
 
         foreach ($sections as $section) {
