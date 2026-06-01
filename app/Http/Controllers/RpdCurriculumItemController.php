@@ -48,12 +48,13 @@ class RpdCurriculumItemController extends Controller
             'type' => ['required', Rule::in(['section', 'topic', 'final_work'])],
             'parent_id' => ['nullable', 'integer', 'exists:rpd_curriculum_items,id'],
             'title' => ['required', 'string', 'max:255'],
-            'total_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
         ]);
+
+        $validated['total_hours'] = (int) $validated['theory_hours'] + (int) $validated['practice_hours'];
 
         if ($validated['type'] === 'topic') {
             $parent = $rpdProgram->curriculumItems()
@@ -102,12 +103,13 @@ class RpdCurriculumItemController extends Controller
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'total_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
         ]);
+
+        $validated['total_hours'] = (int) $validated['theory_hours'] + (int) $validated['practice_hours'];
 
         if (! empty($validated['control_form_id'])) {
             $controlForm = RpdControlForm::find($validated['control_form_id']);
@@ -136,6 +138,10 @@ class RpdCurriculumItemController extends Controller
     {
         abort_unless($curriculumItem->rpd_program_id === $rpdProgram->id, 404);
 
+        if ($curriculumItem->type === 'section') {
+            $curriculumItem->children()->delete();
+        }
+
         $curriculumItem->delete();
 
         $this->renumberProgram($rpdProgram);
@@ -144,7 +150,6 @@ class RpdCurriculumItemController extends Controller
             ->route('rpd-programs.curriculum.index', $rpdProgram)
             ->with('success', 'Строка учебного плана удалена.');
     }
-
     private function makeSectionNumber(RpdProgram $rpdProgram): string
     {
         $count = $rpdProgram->curriculumItems()
