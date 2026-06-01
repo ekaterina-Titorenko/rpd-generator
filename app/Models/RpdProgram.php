@@ -70,7 +70,9 @@ class RpdProgram extends Model
     {
         return match ($this->status) {
             'draft' => 'Черновик',
-            'ready' => 'Готова к генерации',
+            'submitted' => 'На проверке',
+            'revision' => 'На доработке',
+            'approved' => 'Утверждена',
             'generated' => 'Документ сформирован',
             default => 'Неизвестно',
         };
