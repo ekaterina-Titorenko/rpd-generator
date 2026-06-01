@@ -765,3 +765,12 @@ a {
 .curriculum-parent-field {
     min-width: 220px;
 }
+
+.curriculum-total-row td {
+    background: #f1f5f9 !important;
+    font-weight: 700;
+}
+
+.curriculum-total-row td:first-child {
+    border-left: 1px solid var(--border);
+}

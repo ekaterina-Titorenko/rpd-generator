@@ -236,6 +236,15 @@
                     @endif
                     @endforeach
                     @endforeach
+                    <tr class="curriculum-total-row">
+                        <td></td>
+                        <td><strong>ИТОГО</strong></td>
+                        <td><strong>{{ $totalHours }}</strong></td>
+                        <td><strong>{{ $theoryHours }}</strong></td>
+                        <td><strong>{{ $practiceHours }}</strong></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
         </div>

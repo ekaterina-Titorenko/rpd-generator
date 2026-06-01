@@ -45,10 +45,6 @@
     </td>
 
     <td>
-        @if ($item->type === 'section')
-        <span class="muted">—</span>
-        <input form="update-curriculum-item-{{ $item->id }}" type="hidden" name="control_form" value="">
-        @else
         <input
             form="update-curriculum-item-{{ $item->id }}"
             name="control_form"
@@ -56,7 +52,6 @@
             value="{{ old('control_form', $item->control_form) }}"
             list="control-forms-list"
             data-autosubmit>
-        @endif
     </td>
 
     <td>
