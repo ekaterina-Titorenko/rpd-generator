@@ -43,6 +43,7 @@ class RpdResource extends Model
             'article' => 'Статья',
             'electronic' => 'Электронный ресурс',
             'legal' => 'Нормативный документ',
+            'manual' => 'Готовое описание по ГОСТ',
             default => 'Источник',
         };
     }

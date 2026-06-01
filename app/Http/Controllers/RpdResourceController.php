@@ -242,4 +242,52 @@ class RpdResourceController extends Controller
 
         abort_unless($rpdProgram->user_id === $request->user()->id, 403);
     }
+
+    public function bulkStore(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $validated = $request->validate([
+            'type' => ['required', Rule::in([
+                'main_recommended',
+                'additional',
+                'internet',
+            ])],
+            'items' => ['required', 'string'],
+        ]);
+
+        $lines = collect(preg_split('/\r\n|\r|\n/', $validated['items']))
+            ->map(fn($line) => trim($line))
+            ->filter()
+            ->values();
+
+        if ($lines->isEmpty()) {
+            return back()
+                ->withErrors(['items' => 'Добавьте хотя бы один источник.'])
+                ->withInput();
+        }
+
+        $sortOrder = (int) $rpdProgram->resources()->max('sort_order');
+
+        foreach ($lines as $line) {
+            $sortOrder++;
+
+            $rpdProgram->resources()->create([
+                'type' => $validated['type'],
+                'source_type' => 'manual',
+                'title' => $line,
+                'url' => null,
+                'metadata' => [
+                    'manual_title' => $line,
+                ],
+                'sort_order' => $sortOrder,
+            ]);
+        }
+
+        return redirect()
+            ->route('rpd-programs.resources.index', $rpdProgram)
+            ->with('success', 'Источники добавлены массово.');
+    }
 }

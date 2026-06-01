@@ -902,3 +902,16 @@ a {
     gap: 16px;
     align-items: flex-start;
 }
+
+.resource-bulk-form {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 160px;
+    gap: 16px;
+    align-items: end;
+}
+
+@media (max-width: 980px) {
+    .resource-bulk-form {
+        grid-template-columns: 1fr;
+    }
+}

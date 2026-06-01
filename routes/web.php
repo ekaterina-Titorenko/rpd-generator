@@ -78,6 +78,10 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('resources/{resource}', [RpdResourceController::class, 'destroy'])
                 ->name('resources.destroy');
+
+            Route::post('resources/bulk', [RpdResourceController::class, 'bulkStore'])
+                ->middleware('role:admin')
+                ->name('resources.bulk-store');
         });
 });
 
