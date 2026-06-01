@@ -721,3 +721,34 @@ a {
     gap: 10px;
     flex-wrap: wrap;
 }
+
+.document-section {
+    display: grid;
+    gap: 12px;
+    line-height: 1.6;
+}
+
+.document-section h3 {
+    margin: 10px 0 0;
+    font-size: 17px;
+}
+
+.document-section p {
+    margin: 0;
+    white-space: pre-line;
+}
+
+.overview-table input,
+.overview-table textarea {
+    display: none;
+}
+
+.overview-table td,
+.overview-table th {
+    vertical-align: middle;
+}
+
+.overview-warning {
+    margin-top: 0;
+    margin-bottom: 18px;
+}

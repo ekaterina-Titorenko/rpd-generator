@@ -57,7 +57,22 @@ class RpdProgramController extends Controller
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
-        return view('rpd-programs.show', compact('rpdProgram'));
+        $rpdProgram->load([
+            'curriculumItems.children',
+            'curriculumItems.controlForm',
+            'authors',
+            'resources',
+            'assessmentItems',
+            'contentSections',
+        ]);
+
+        $curriculumItems = $rpdProgram->curriculumItems()
+            ->with(['children', 'controlForm'])
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems'));
     }
 
     public function edit(Request $request, RpdProgram $rpdProgram)
