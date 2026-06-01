@@ -257,10 +257,15 @@ a {
 }
 
 .alert-warning {
-    margin-top: 14px;
-    background: var(--warning-bg);
-    color: var(--warning-text);
-    border-color: var(--warning-border);
+    position: relative;
+    margin-top: 18px;
+    padding: 18px 20px 18px 24px;
+    background: #f9ded8;
+    color: #8c322a;
+    border: 2px solid #f25a38;
+    border-left-width: 8px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px rgba(140, 50, 42, 0.12);
 }
 
 .empty-state {
@@ -433,8 +438,14 @@ a {
 }
 
 .summary-item-warning {
-    border-color: var(--warning-border);
-    background: var(--warning-bg);
+    border: 2px solid #f25a38;
+    background: #f9ded8;
+    color: #8c322a;
+}
+
+.summary-item-warning span,
+.summary-item-warning strong {
+    color: #8c322a;
 }
 
 .curriculum-add-form {
