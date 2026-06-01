@@ -45,6 +45,9 @@ class RpdProgram extends Model
         'status',
         'review_comment',
         'education_format',
+        'lessons_per_week',
+        'academic_hours_per_lesson',
+        'academic_hour_minutes',
     ];
 
     protected $casts = [

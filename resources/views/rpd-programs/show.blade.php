@@ -70,6 +70,16 @@
         </div>
 
         <div class="detail-item">
+            <div class="detail-label">Периодичность занятий</div>
+            <div class="detail-value">{{ $rpdProgram->lessons_per_week }} в неделю</div>
+        </div>
+
+        <div class="detail-item">
+            <div class="detail-label">Академических часов за занятие</div>
+            <div class="detail-value">{{ $rpdProgram->academic_hours_per_lesson }}</div>
+        </div>
+
+        <div class="detail-item">
             <div class="detail-label">Статус</div>
             <div class="detail-value">
                 <span class="badge">{{ $rpdProgram->status_label }}</span>
@@ -120,6 +130,8 @@
         <h3>Требования к уровню подготовки слушателей</h3>
         <p>{{ $rpdProgram->preparation_requirements }}</p>
     </div>
+
+
 </section>
 
 <section class="card">

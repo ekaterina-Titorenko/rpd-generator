@@ -111,6 +111,40 @@
                 <option value="online" @selected(old('education_format', $rpdProgram->education_format) === 'online')>Дистанционный</option>
             </select>
         </div>
+
+        <div class="form-field">
+            <label for="lessons_per_week">Периодичность занятий *</label>
+            <input
+                id="lessons_per_week"
+                name="lessons_per_week"
+                type="text"
+                value="{{ old('lessons_per_week', $rpdProgram->lessons_per_week) }}"
+                required>
+        </div>
+
+        <div class="form-field">
+            <label for="academic_hours_per_lesson">Академических часов за занятие *</label>
+            <input
+                id="academic_hours_per_lesson"
+                name="academic_hours_per_lesson"
+                type="number"
+                value="{{ old('academic_hours_per_lesson', $rpdProgram->academic_hours_per_lesson) }}"
+                min="1"
+                max="12"
+                required>
+        </div>
+
+        <div class="form-field">
+            <label for="academic_hour_minutes">Длительность академического часа, минут *</label>
+            <input
+                id="academic_hour_minutes"
+                name="academic_hour_minutes"
+                type="number"
+                value="{{ old('academic_hour_minutes', $rpdProgram->academic_hour_minutes) }}"
+                min="30"
+                max="60"
+                required>
+        </div>
     </div>
 </form>
 @endsection
