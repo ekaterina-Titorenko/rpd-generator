@@ -81,6 +81,10 @@ class RpdProgramController extends Controller
 
     public function destroy(RpdProgram $rpdProgram)
     {
-        //
+        $rpdProgram->delete();
+
+        return redirect()
+            ->route('rpd-programs.index')
+            ->with('success', 'РПД удалена.');
     }
 }
