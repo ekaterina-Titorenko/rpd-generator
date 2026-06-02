@@ -111,6 +111,9 @@ Route::middleware('auth')->group(function () {
 
             Route::get('print', [RpdProgramController::class, 'print'])
                 ->name('print');
+
+            Route::get('download-docx', [RpdProgramController::class, 'downloadDocx'])
+                ->name('download-docx');
         });
 });
 

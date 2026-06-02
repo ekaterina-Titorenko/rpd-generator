@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RpdProgram;
 use Illuminate\Http\Request;
+use App\Services\RpdDocxGenerator;
 
 class RpdProgramController extends Controller
 {
@@ -511,5 +512,19 @@ class RpdProgramController extends Controller
             ->sortBy('sort_order');
 
         return view('rpd-programs.print', compact('rpdProgram', 'curriculumItems'));
+    }
+
+    public function downloadDocx(Request $request, RpdProgram $rpdProgram, RpdDocxGenerator $generator)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless(
+            $rpdProgram->status === 'approved' || $request->user()->role === 'admin',
+            403
+        );
+
+        $path = $generator->generate($rpdProgram);
+
+        return response()->download($path)->deleteFileAfterSend(true);
     }
 }

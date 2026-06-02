@@ -18,6 +18,11 @@
                 Печатная версия
             </a>
             @endif
+            @if ($rpdProgram->status === 'approved' || auth()->user()->role === 'admin')
+            <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
+                Скачать DOCX
+            </a>
+            @endif
             <form
                 method="POST"
                 action="{{ route('rpd-programs.destroy', $rpdProgram) }}"
