@@ -8,8 +8,9 @@ services:
     env_file:
       - .env
     volumes:
+      - ./.env:/var/www/html/.env:ro
       - ./database:/var/www/html/database
-      - ./storage:/var/www/html/storage
+      - ./storage:/var/www/html/storageÍ
     depends_on:
       - meilisearch
 
