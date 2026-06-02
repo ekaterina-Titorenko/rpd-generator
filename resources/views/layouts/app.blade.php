@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body>
     <div class="app">
         <header class="app-header">
@@ -19,43 +21,48 @@
                 <a href="{{ route('rpd-programs.index') }}">РПД</a>
 
                 @auth
-                    <span class="app-user">
-                        {{ auth()->user()->name }}
-                        @if (auth()->user()->role === 'admin')
-                            · администратор
-                        @else
-                            · преподаватель
-                        @endif
-                    </span>
+                <span class="app-user">
+                    {{ auth()->user()->name }}
+                    @if (auth()->user()->role === 'admin')
+                    · администратор
+                    @else
+                    · преподаватель
+                    @endif
+                </span>
 
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary">Выйти</button>
-                    </form>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary">Выйти</button>
+                </form>
                 @endauth
+
+                @if (auth()->check() && auth()->user()->role === 'admin')
+                <a href="{{ route('admin.users.index') }}">Пользователи</a>
+                @endif
             </nav>
         </header>
 
         <main class="app-main">
             @if (session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-error">
-                    <strong>Проверьте форму.</strong>
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+            <div class="alert alert-error">
+                <strong>Проверьте форму.</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
             @endif
 
             @yield('content')
         </main>
     </div>
 </body>
+
 </html>

@@ -9,6 +9,8 @@ use App\Http\Controllers\RpdAssessmentItemController;
 use App\Http\Controllers\RpdResourceController;
 use App\Http\Controllers\RpdAuthorController;
 use App\Http\Controllers\RpdScheduleController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -38,6 +40,20 @@ Route::middleware('auth')->group(function () {
     Route::patch('rpd-programs/{rpdProgram}/reject', [RpdProgramController::class, 'reject'])
         ->middleware('role:admin')
         ->name('rpd-programs.reject');
+
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware('auth')
+        ->group(function () {
+            Route::get('users', [AdminUserController::class, 'index'])
+                ->name('users.index');
+
+            Route::get('users/create', [AdminUserController::class, 'create'])
+                ->name('users.create');
+
+            Route::post('users', [AdminUserController::class, 'store'])
+                ->name('users.store');
+        });
 
     Route::prefix('rpd-programs/{rpdProgram}')
         ->name('rpd-programs.')

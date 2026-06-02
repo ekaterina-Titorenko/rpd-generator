@@ -10,14 +10,65 @@ class RpdProgramController extends Controller
 {
     public function index(Request $request)
     {
-        $programs = RpdProgram::query()
-            ->when($request->user()->role === 'teacher', function ($query) use ($request) {
-                $query->where('user_id', $request->user()->id);
-            })
-            ->latest()
-            ->get();
+        $query = RpdProgram::query()
+            ->with('user');
 
-        return view('rpd-programs.index', compact('programs'));
+        if ($request->user()->role !== 'admin') {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        $search = trim((string) $request->get('search'));
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder
+                    ->where('rpd_programs.title', 'like', "%{$search}%")
+                    ->orWhere('rpd_programs.direction', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery
+                            ->where('users.name', 'like', "%{$search}%")
+                            ->orWhere('users.email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $allowedSorts = [
+            'title',
+            'teacher',
+            'direction',
+            'year',
+            'status',
+            'created_at',
+        ];
+
+        $sort = (string) $request->get('sort', 'created_at');
+        $direction = $request->get('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        if ($sort === 'teacher') {
+            $query
+                ->leftJoin('users', 'users.id', '=', 'rpd_programs.user_id')
+                ->select('rpd_programs.*')
+                ->orderBy('users.name', $direction)
+                ->orderBy('rpd_programs.created_at', 'desc');
+        } else {
+            $query
+                ->orderBy("rpd_programs.{$sort}", $direction)
+                ->orderBy('rpd_programs.created_at', 'desc');
+        }
+
+        $rpdPrograms = $query
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('rpd-programs.index', compact(
+            'rpdPrograms',
+            'sort',
+            'direction'
+        ));
     }
 
     public function create()
@@ -46,7 +97,7 @@ class RpdProgramController extends Controller
 
         $directionTexts = $this->makeDirectionTexts($validated);
 
-        $program = RpdProgram::create(array_merge($validated, $directionTexts, [
+        $rpdProgram = RpdProgram::create(array_merge($validated, $directionTexts, [
             'user_id' => $request->user()->id,
 
             'education_form' => $standardTexts['education_form'],
@@ -58,7 +109,7 @@ class RpdProgramController extends Controller
         ]));
 
         return redirect()
-            ->route('rpd-programs.show', $program)
+            ->route('rpd-programs.show', $rpdProgram)
             ->with('success', 'РПД создана.');
     }
 

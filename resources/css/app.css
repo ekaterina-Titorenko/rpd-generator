@@ -1317,3 +1317,68 @@ a {
         border-radius: 0;
     }
 }
+
+/* =========================================================
+   Filters and pagination
+   ========================================================= */
+.filter-form {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) auto;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 22px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.pagination-wrap {
+    margin-top: 18px;
+}
+
+.table th a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.table th a:hover {
+    color: var(--primary);
+}
+
+.rpd-programs-table {
+    min-width: 1120px;
+}
+
+.rpd-programs-table th:last-child,
+.rpd-programs-table td:last-child {
+    width: 300px;
+}
+
+.rpd-program-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.rpd-program-actions form {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-actions .btn {
+        width: 100%;
+    }
+}
