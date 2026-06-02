@@ -43,15 +43,30 @@
 
             <div class="form-field">
                 <label for="role">Роль *</label>
-                <select id="role" name="role" required>
+                <select id="role" name="role" required data-role-select>
                     <option value="teacher" @selected(old('role')==='teacher' )>
                         Преподаватель
                     </option>
+
+                    @if ($canManageAdmins)
                     <option value="admin" @selected(old('role')==='admin' )>
                         Администратор
                     </option>
+                    @endif
                 </select>
             </div>
+            @if ($canManageAdmins)
+            <label class="checkbox-field form-field-wide" data-can-manage-admins-field>
+                <input
+                    type="checkbox"
+                    name="can_manage_admins"
+                    value="1"
+                    @checked(old('can_manage_admins'))>
+                <span>
+                    Главный администратор: может создавать администраторов и сбрасывать временные пароли.
+                </span>
+            </label>
+            @endif
             <div class="form-field form-field-wide">
                 <label>Временный пароль</label>
 

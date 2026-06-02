@@ -25,6 +25,7 @@ class UserController extends Controller
         }
 
         $users = $query
+            ->orderByDesc('can_manage_admins')
             ->orderBy('role')
             ->orderBy('name')
             ->paginate(20)
@@ -33,25 +34,35 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return view('admin.users.create', [
             'defaultPassword' => self::DEFAULT_TEMPORARY_PASSWORD,
+            'canManageAdmins' => $this->canManageAdmins($request->user()),
         ]);
     }
 
     public function store(Request $request)
     {
+        $canManageAdmins = $this->canManageAdmins($request->user());
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(['teacher', 'admin'])],
+            'role' => ['required', Rule::in($canManageAdmins ? ['teacher', 'admin'] : ['teacher'])],
+            'can_manage_admins' => ['nullable', 'boolean'],
         ]);
+
+        $role = $validated['role'];
+        $canManageAdminsFlag = $canManageAdmins
+            && $role === 'admin'
+            && $request->boolean('can_manage_admins');
 
         User::create([
             'name' => $validated['name'],
             'email' => mb_strtolower($validated['email']),
-            'role' => $validated['role'],
+            'role' => $role,
+            'can_manage_admins' => $canManageAdminsFlag,
             'password' => Hash::make(self::DEFAULT_TEMPORARY_PASSWORD),
             'must_change_password' => true,
         ]);
@@ -61,8 +72,10 @@ class UserController extends Controller
             ->with('success', 'Пользователь создан. Временный пароль: ' . self::DEFAULT_TEMPORARY_PASSWORD);
     }
 
-    public function resetPassword(User $user)
+    public function resetPassword(Request $request, User $user)
     {
+        abort_unless($this->canManageAdmins($request->user()), 403);
+
         $user->update([
             'password' => Hash::make(self::DEFAULT_TEMPORARY_PASSWORD),
             'must_change_password' => true,
@@ -77,10 +90,23 @@ class UserController extends Controller
     {
         abort_if($request->user()->id === $user->id, 422, 'Нельзя удалить собственный аккаунт.');
 
+        if ($user->role === 'admin') {
+            abort_unless($this->canManageAdmins($request->user()), 403);
+        }
+
+        if ($user->can_manage_admins) {
+            abort_unless($request->user()->email === 'admin@example.com', 403);
+        }
+
         $user->delete();
 
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'Пользователь удалён.');
+    }
+
+    private function canManageAdmins(?User $user): bool
+    {
+        return $user?->role === 'admin' && (bool) $user->can_manage_admins;
     }
 }

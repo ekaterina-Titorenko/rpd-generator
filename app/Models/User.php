@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\RpdProgram;
 
 
-#[Fillable(['name', 'email', 'role', 'password', 'must_change_password',])]
+#[Fillable(['name', 'email', 'role', 'password', 'must_change_password', 'can_manage_admins',])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,6 +31,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
+            'can_manage_admins' => 'boolean',
         ];
     }
 

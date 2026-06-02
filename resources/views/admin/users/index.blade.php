@@ -57,6 +57,12 @@
                             <span class="badge">
                                 {{ $user->role === 'admin' ? 'Администратор' : 'Преподаватель' }}
                             </span>
+
+                            @if ($user->can_manage_admins)
+                            <div class="field-hint">
+                                Главный администратор
+                            </div>
+                            @endif
                         </td>
                         <td>
                             @if ($user->must_change_password)
@@ -68,31 +74,51 @@
                         <td>{{ $user->created_at?->format('d.m.Y H:i') }}</td>
                         <td>
                             <div class="table-actions">
-                                <form
-                                    method="POST"
-                                    action="{{ route('admin.users.reset-password', $user) }}"
-                                    onsubmit="return confirm('Сбросить пароль пользователя на 12345678? После входа пользователь должен будет сменить пароль.');">
-                                    @csrf
-                                    @method('PATCH')
 
-                                    <button type="submit" class="btn btn-secondary btn-compact">
-                                        Сбросить пароль
-                                    </button>
-                                </form>
+                                @if (auth()->user()->can_manage_admins)
+                                    <form
+                                        method="POST"
+                                        action="{{ route('admin.users.reset-password', $user) }}"
+                                        onsubmit="return confirm('Сбросить пароль пользователя на 12345678? После входа пользователь должен будет сменить пароль.');">
+                                        @csrf
+                                        @method('PATCH')
 
-                                @if (auth()->id() !== $user->id)
-                                <form
-                                    method="POST"
-                                    action="{{ route('admin.users.destroy', $user) }}"
-                                    onsubmit="return confirm('Удалить пользователя? Это действие нельзя отменить.');">
-                                    @csrf
-                                    @method('DELETE')
+                                        <button type="submit" class="btn btn-secondary btn-compact">
+                                            Сбросить пароль
+                                        </button>
+                                    </form>
+                                    @endif
 
-                                    <button type="submit" class="btn btn-danger btn-compact">
-                                        Удалить
-                                    </button>
-                                </form>
-                                @endif
+
+                                    @if (auth()->id() !== $user->id)
+                                    <form
+                                        method="POST"
+                                        action="{{ route('admin.users.destroy', $user) }}"
+                                        onsubmit="return confirm('Удалить пользователя? Это действие нельзя отменить.');">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        @if (
+                                        auth()->id() !== $user->id
+                                        && (
+                                        $user->role !== 'admin'
+                                        || auth()->user()->can_manage_admins
+                                        )
+                                        )
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.users.destroy', $user) }}"
+                                            onsubmit="return confirm('Удалить пользователя? Это действие нельзя отменить.');">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit" class="btn btn-danger btn-compact">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </form>
+                                    @endif
                             </div>
                         </td>
 

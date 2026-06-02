@@ -354,3 +354,27 @@ document.addEventListener('DOMContentLoaded', () => {
         loadResults(link.href);
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const roleSelect = document.querySelector('[data-role-select]');
+    const canManageAdminsField = document.querySelector('[data-can-manage-admins-field]');
+
+    if (!roleSelect || !canManageAdminsField) {
+        return;
+    }
+
+    const sync = () => {
+        canManageAdminsField.hidden = roleSelect.value !== 'admin';
+
+        if (canManageAdminsField.hidden) {
+            const checkbox = canManageAdminsField.querySelector('input[type="checkbox"]');
+
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+        }
+    };
+
+    roleSelect.addEventListener('change', sync);
+    sync();
+});
