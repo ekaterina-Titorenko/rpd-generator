@@ -5,24 +5,25 @@ set -e
 cd "$(dirname "$0")"
 
 BRANCH="${DEPLOY_BRANCH:-main}"
+COMPOSE="docker-compose -f docker-compose.prod.yml"
 
 echo "Pull latest code"
 git fetch origin
 git reset --hard "origin/${BRANCH}"
 
-echo "Build app image"
-docker compose -f docker-compose.prod.yml build app
+echo "Build images"
+$COMPOSE build
 
 echo "Start containers"
-docker compose -f docker-compose.prod.yml up -d
+$COMPOSE up -d
 
 echo "Prepare Laravel"
-docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
-docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
-docker compose -f docker-compose.prod.yml exec -T app php artisan scout:sync-index-settings || true
-docker compose -f docker-compose.prod.yml exec -T app php artisan scout:import "App\\Models\\RpdProgram" || true
-docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
-docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
-docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
+$COMPOSE exec -T app php artisan optimize:clear
+$COMPOSE exec -T app php artisan migrate --force
+$COMPOSE exec -T app php artisan scout:sync-index-settings || true
+$COMPOSE exec -T app php artisan scout:import "App\\Models\\RpdProgram" || true
+$COMPOSE exec -T app php artisan config:cache
+$COMPOSE exec -T app php artisan route:cache
+$COMPOSE exec -T app php artisan view:cache
 
 echo "Deployment finished"
