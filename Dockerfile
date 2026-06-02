@@ -16,6 +16,10 @@ FROM php:8.4-fpm
 
 WORKDIR /var/www/html
 
+FROM php:8.4-fpm
+
+WORKDIR /var/www/html
+
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -23,8 +27,12 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libicu-dev \
     libxml2-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     sqlite3 \
     libsqlite3-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
     pdo \
     pdo_sqlite \
@@ -32,6 +40,7 @@ RUN apt-get update && apt-get install -y \
     intl \
     bcmath \
     xml \
+    gd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
