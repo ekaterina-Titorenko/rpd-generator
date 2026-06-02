@@ -107,6 +107,24 @@
     </div>
 </section>
 @endif
+@if (auth()->user()->role === 'admin' && $rpdProgram->status !== 'submitted')
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Проверка администратором</h2>
+            <p class="card-description">
+                Административное решение доступно после отправки РПД преподавателем на проверку.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="alert alert-warning">
+            Текущий статус: {{ $rpdProgram->status_label }}. РПД можно просматривать, но нельзя утвердить, вернуть на доработку или отклонить до отправки на проверку.
+        </div>
+    </div>
+</section>
+@endif
 <section class="card">
     <div class="card-header">
         <div>
@@ -506,8 +524,7 @@
     @endunless
 </section>
 @endif
-
-@if (auth()->user()->role === 'admin' && in_array($rpdProgram->status, ['draft', 'submitted', 'revision', 'approved'], true))
+@if (auth()->user()->role === 'admin' && $rpdProgram->status === 'submitted')
 <section class="card">
     <div class="card-header">
         <div>
