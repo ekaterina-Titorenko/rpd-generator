@@ -13,7 +13,11 @@
         <div class="actions">
             <a href="{{ route('rpd-programs.index') }}" class="btn btn-secondary">К списку</a>
             <a href="{{ route('rpd-programs.edit', $rpdProgram) }}" class="btn btn-primary">Редактировать</a>
-
+            @if ($rpdProgram->status === 'approved' || auth()->user()->role === 'admin')
+            <a href="{{ route('rpd-programs.print', $rpdProgram) }}" class="btn btn-secondary">
+                Печатная версия
+            </a>
+            @endif
             <form
                 method="POST"
                 action="{{ route('rpd-programs.destroy', $rpdProgram) }}"

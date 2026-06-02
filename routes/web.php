@@ -99,7 +99,7 @@ Route::middleware('auth')->group(function () {
 
             Route::get('schedule', [RpdScheduleController::class, 'index'])
                 ->name('schedule.index');
-                
+
             Route::patch('schedule/weeks', [RpdScheduleController::class, 'updateWeeks'])
                 ->name('schedule.weeks.update');
 
@@ -108,6 +108,9 @@ Route::middleware('auth')->group(function () {
 
             Route::put('schedule', [RpdScheduleController::class, 'update'])
                 ->name('schedule.update');
+
+            Route::get('print', [RpdProgramController::class, 'print'])
+                ->name('print');
         });
 });
 

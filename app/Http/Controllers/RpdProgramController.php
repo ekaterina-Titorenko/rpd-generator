@@ -486,4 +486,30 @@ class RpdProgramController extends Controller
             ],
         ];
     }
+
+    public function print(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless(
+            $rpdProgram->status === 'approved' || $request->user()->role === 'admin',
+            403
+        );
+
+        $rpdProgram->load([
+            'curriculumItems.children',
+            'contentSections' => fn($query) => $query
+                ->whereNotNull('rpd_curriculum_item_id')
+                ->orderBy('sort_order'),
+            'scheduleItems',
+            'resources',
+            'authors',
+        ]);
+
+        $curriculumItems = $rpdProgram->curriculumItems
+            ->whereNull('parent_id')
+            ->sortBy('sort_order');
+
+        return view('rpd-programs.print', compact('rpdProgram', 'curriculumItems'));
+    }
 }

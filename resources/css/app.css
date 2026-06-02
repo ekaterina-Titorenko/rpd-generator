@@ -1171,3 +1171,90 @@ html {
 .card[id] {
     scroll-margin-top: 24px;
 }
+
+.print-document {
+    display: grid;
+    gap: 18px;
+}
+
+.print-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.print-page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 42px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: #ffffff;
+    color: #1f2933;
+}
+
+.print-page h1 {
+    text-align: center;
+    margin: 0 0 24px;
+    font-size: 24px;
+}
+
+.print-page h2 {
+    margin-top: 28px;
+    font-size: 20px;
+}
+
+.print-page h3 {
+    margin-top: 18px;
+    font-size: 16px;
+}
+
+.print-page p,
+.print-page li {
+    line-height: 1.55;
+}
+
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.print-table th,
+.print-table td {
+    border: 1px solid #1f2933;
+    padding: 7px;
+    vertical-align: top;
+}
+
+.print-table th {
+    text-align: center;
+    font-weight: 700;
+}
+
+.print-schedule-table {
+    font-size: 11px;
+}
+
+@media print {
+    body {
+        background: #ffffff;
+    }
+
+    .app-header,
+    .print-actions {
+        display: none !important;
+    }
+
+    .app-main {
+        padding: 0;
+    }
+
+    .print-page {
+        max-width: none;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+    }
+}
