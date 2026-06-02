@@ -1471,3 +1471,9 @@ a {
         width: 100%;
     }
 }
+
+.badge-warning {
+    border-color: var(--warning-border);
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}

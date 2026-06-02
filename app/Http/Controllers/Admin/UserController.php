@@ -56,6 +56,7 @@ class UserController extends Controller
             'email' => mb_strtolower($validated['email']),
             'role' => $validated['role'],
             'password' => Hash::make($validated['password']),
+            'must_change_password' => true,
         ]);
 
         return redirect()

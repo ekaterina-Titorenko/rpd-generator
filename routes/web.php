@@ -1,16 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RpdAssessmentItemController;
+use App\Http\Controllers\RpdAuthorController;
+use App\Http\Controllers\RpdContentSectionController;
 use App\Http\Controllers\RpdCurriculumItemController;
 use App\Http\Controllers\RpdProgramController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RpdContentSectionController;
-use App\Http\Controllers\RpdAssessmentItemController;
 use App\Http\Controllers\RpdResourceController;
-use App\Http\Controllers\RpdAuthorController;
 use App\Http\Controllers\RpdScheduleController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
-
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -21,116 +21,130 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('password/change', [ForcePasswordChangeController::class, 'edit'])
+        ->name('password.force.edit');
 
-    Route::resource('rpd-programs', RpdProgramController::class);
-    Route::patch('rpd-programs/{rpdProgram}/submit', [RpdProgramController::class, 'submit'])
-        ->name('rpd-programs.submit');
+    Route::patch('password/change', [ForcePasswordChangeController::class, 'update'])
+        ->name('password.force.update');
 
-    Route::patch('rpd-programs/{rpdProgram}/return-for-revision', [RpdProgramController::class, 'returnForRevision'])
-        ->middleware('role:admin')
-        ->name('rpd-programs.return-for-revision');
+    Route::middleware('password.changed')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'edit'])
+            ->name('profile.edit');
 
-    Route::patch('rpd-programs/{rpdProgram}/approve', [RpdProgramController::class, 'approve'])
-        ->middleware('role:admin')
-        ->name('rpd-programs.approve');
+        Route::patch('/profile', [ProfileController::class, 'update'])
+            ->name('profile.update');
 
-    Route::patch('rpd-programs/{rpdProgram}/reject', [RpdProgramController::class, 'reject'])
-        ->middleware('role:admin')
-        ->name('rpd-programs.reject');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])
+            ->name('profile.destroy');
 
-    Route::prefix('admin')
-        ->name('admin.')
-        ->middleware('auth')
-        ->group(function () {
-            Route::get('users', [AdminUserController::class, 'index'])
-                ->name('users.index');
+        Route::resource('rpd-programs', RpdProgramController::class);
 
-            Route::get('users/create', [AdminUserController::class, 'create'])
-                ->name('users.create');
+        Route::patch('rpd-programs/{rpdProgram}/submit', [RpdProgramController::class, 'submit'])
+            ->name('rpd-programs.submit');
 
-            Route::post('users', [AdminUserController::class, 'store'])
-                ->name('users.store');
-        });
+        Route::patch('rpd-programs/{rpdProgram}/return-for-revision', [RpdProgramController::class, 'returnForRevision'])
+            ->middleware('role:admin')
+            ->name('rpd-programs.return-for-revision');
 
-    Route::prefix('rpd-programs/{rpdProgram}')
-        ->name('rpd-programs.')
-        ->group(function () {
-            Route::get('curriculum', [RpdCurriculumItemController::class, 'index'])
-                ->name('curriculum.index');
+        Route::patch('rpd-programs/{rpdProgram}/approve', [RpdProgramController::class, 'approve'])
+            ->middleware('role:admin')
+            ->name('rpd-programs.approve');
 
-            Route::post('curriculum', [RpdCurriculumItemController::class, 'store'])
-                ->name('curriculum.store');
+        Route::patch('rpd-programs/{rpdProgram}/reject', [RpdProgramController::class, 'reject'])
+            ->middleware('role:admin')
+            ->name('rpd-programs.reject');
 
-            Route::put('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'update'])
-                ->name('curriculum.update');
+        Route::prefix('admin')
+            ->name('admin.')
+            ->middleware('role:admin')
+            ->group(function () {
+                Route::get('users', [AdminUserController::class, 'index'])
+                    ->name('users.index');
 
-            Route::delete('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'destroy'])
-                ->name('curriculum.destroy');
+                Route::get('users/create', [AdminUserController::class, 'create'])
+                    ->name('users.create');
 
-            Route::get('content', [RpdContentSectionController::class, 'index'])
-                ->name('content.index');
+                Route::post('users', [AdminUserController::class, 'store'])
+                    ->name('users.store');
+            });
 
-            Route::post('content/sync', [RpdContentSectionController::class, 'sync'])
-                ->name('content.sync');
+        Route::prefix('rpd-programs/{rpdProgram}')
+            ->name('rpd-programs.')
+            ->group(function () {
+                Route::get('curriculum', [RpdCurriculumItemController::class, 'index'])
+                    ->name('curriculum.index');
 
-            Route::put('content/{contentSection}', [RpdContentSectionController::class, 'update'])
-                ->name('content.update');
+                Route::post('curriculum', [RpdCurriculumItemController::class, 'store'])
+                    ->name('curriculum.store');
 
-            Route::get('assessment', [RpdAssessmentItemController::class, 'index'])
-                ->name('assessment.index');
+                Route::put('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'update'])
+                    ->name('curriculum.update');
 
-            Route::put('assessment', [RpdAssessmentItemController::class, 'update'])
-                ->name('assessment.update');
+                Route::delete('curriculum/{curriculumItem}', [RpdCurriculumItemController::class, 'destroy'])
+                    ->name('curriculum.destroy');
 
-            Route::get('resources', [RpdResourceController::class, 'index'])
-                ->name('resources.index');
+                Route::get('content', [RpdContentSectionController::class, 'index'])
+                    ->name('content.index');
 
-            Route::post('resources', [RpdResourceController::class, 'store'])
-                ->name('resources.store');
+                Route::post('content/sync', [RpdContentSectionController::class, 'sync'])
+                    ->name('content.sync');
 
-            Route::put('resources/{resource}', [RpdResourceController::class, 'update'])
-                ->name('resources.update');
+                Route::put('content/{contentSection}', [RpdContentSectionController::class, 'update'])
+                    ->name('content.update');
 
-            Route::delete('resources/{resource}', [RpdResourceController::class, 'destroy'])
-                ->name('resources.destroy');
+                Route::get('assessment', [RpdAssessmentItemController::class, 'index'])
+                    ->name('assessment.index');
 
-            Route::post('resources/bulk', [RpdResourceController::class, 'bulkStore'])
-                ->middleware('role:admin')
-                ->name('resources.bulk-store');
+                Route::put('assessment', [RpdAssessmentItemController::class, 'update'])
+                    ->name('assessment.update');
 
-            Route::get('authors', [RpdAuthorController::class, 'index'])
-                ->name('authors.index');
+                Route::get('resources', [RpdResourceController::class, 'index'])
+                    ->name('resources.index');
 
-            Route::post('authors', [RpdAuthorController::class, 'store'])
-                ->name('authors.store');
+                Route::post('resources', [RpdResourceController::class, 'store'])
+                    ->name('resources.store');
 
-            Route::put('authors/{author}', [RpdAuthorController::class, 'update'])
-                ->name('authors.update');
+                Route::put('resources/{resource}', [RpdResourceController::class, 'update'])
+                    ->name('resources.update');
 
-            Route::delete('authors/{author}', [RpdAuthorController::class, 'destroy'])
-                ->name('authors.destroy');
+                Route::delete('resources/{resource}', [RpdResourceController::class, 'destroy'])
+                    ->name('resources.destroy');
 
-            Route::get('schedule', [RpdScheduleController::class, 'index'])
-                ->name('schedule.index');
+                Route::post('resources/bulk', [RpdResourceController::class, 'bulkStore'])
+                    ->middleware('role:admin')
+                    ->name('resources.bulk-store');
 
-            Route::patch('schedule/weeks', [RpdScheduleController::class, 'updateWeeks'])
-                ->name('schedule.weeks.update');
+                Route::get('authors', [RpdAuthorController::class, 'index'])
+                    ->name('authors.index');
 
-            Route::post('schedule/generate', [RpdScheduleController::class, 'generate'])
-                ->name('schedule.generate');
+                Route::post('authors', [RpdAuthorController::class, 'store'])
+                    ->name('authors.store');
 
-            Route::put('schedule', [RpdScheduleController::class, 'update'])
-                ->name('schedule.update');
+                Route::put('authors/{author}', [RpdAuthorController::class, 'update'])
+                    ->name('authors.update');
 
-            Route::get('print', [RpdProgramController::class, 'print'])
-                ->name('print');
+                Route::delete('authors/{author}', [RpdAuthorController::class, 'destroy'])
+                    ->name('authors.destroy');
 
-            Route::get('download-docx', [RpdProgramController::class, 'downloadDocx'])
-                ->name('download-docx');
-        });
+                Route::get('schedule', [RpdScheduleController::class, 'index'])
+                    ->name('schedule.index');
+
+                Route::patch('schedule/weeks', [RpdScheduleController::class, 'updateWeeks'])
+                    ->name('schedule.weeks.update');
+
+                Route::post('schedule/generate', [RpdScheduleController::class, 'generate'])
+                    ->name('schedule.generate');
+
+                Route::put('schedule', [RpdScheduleController::class, 'update'])
+                    ->name('schedule.update');
+
+                Route::get('print', [RpdProgramController::class, 'print'])
+                    ->name('print');
+
+                Route::get('download-docx', [RpdProgramController::class, 'downloadDocx'])
+                    ->name('download-docx');
+            });
+    });
 });
 
 require __DIR__ . '/auth.php';
