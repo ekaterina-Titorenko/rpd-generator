@@ -8,6 +8,7 @@ use App\Http\Controllers\RpdContentSectionController;
 use App\Http\Controllers\RpdAssessmentItemController;
 use App\Http\Controllers\RpdResourceController;
 use App\Http\Controllers\RpdAuthorController;
+use App\Http\Controllers\RpdScheduleController;
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -95,6 +96,15 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('authors/{author}', [RpdAuthorController::class, 'destroy'])
                 ->name('authors.destroy');
+
+            Route::get('schedule', [RpdScheduleController::class, 'index'])
+                ->name('schedule.index');
+
+            Route::post('schedule/generate', [RpdScheduleController::class, 'generate'])
+                ->name('schedule.generate');
+
+            Route::put('schedule', [RpdScheduleController::class, 'update'])
+                ->name('schedule.update');
         });
 });
 

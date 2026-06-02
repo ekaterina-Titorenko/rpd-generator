@@ -112,6 +112,12 @@ class RpdProgramController extends Controller
                 'url' => route('rpd-programs.content.index', $rpdProgram),
             ],
             [
+                'title' => 'Календарный учебный график',
+                'is_ready' => $rpdProgram->scheduleItems->isNotEmpty(),
+                'message' => 'Нужно сформировать и проверить календарный учебный график.',
+                'url' => route('rpd-programs.schedule.index', $rpdProgram),
+            ],
+            [
                 'title' => 'Оценочные материалы',
                 'is_ready' => filled($rpdProgram->control_survey_materials)
                     && filled($rpdProgram->final_practical_work_materials)
@@ -306,7 +312,7 @@ class RpdProgramController extends Controller
 
     private function validateBeforeSubmit(RpdProgram $rpdProgram): array
     {
-        $rpdProgram->load(['curriculumItems.children', 'contentSections']);
+        $rpdProgram->load(['curriculumItems.children', 'contentSections', 'scheduleItems',]);
 
         $errors = [];
 

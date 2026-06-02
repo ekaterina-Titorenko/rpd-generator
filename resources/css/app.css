@@ -1031,3 +1031,40 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+.schedule-scroll {
+    overflow-x: auto;
+}
+
+.schedule-table {
+    min-width: 980px;
+}
+
+.schedule-table th,
+.schedule-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.schedule-table th:first-child,
+.schedule-table td:first-child {
+    min-width: 360px;
+    text-align: left;
+}
+
+.schedule-table textarea {
+    width: 100%;
+    min-width: 90px;
+    min-height: 56px;
+    resize: vertical;
+    text-align: center;
+}
+
+.schedule-row-section {
+    background: #bfbb9f;
+    font-weight: 700;
+}
+
+.schedule-row-topic {
+    background: #f2e3b3;
+}

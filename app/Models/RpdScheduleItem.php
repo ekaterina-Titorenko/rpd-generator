@@ -11,13 +11,7 @@ class RpdScheduleItem extends Model
         'rpd_program_id',
         'rpd_curriculum_item_id',
         'week_number',
-        'theory_hours',
-        'practice_hours',
-        'is_final_work',
-    ];
-
-    protected $casts = [
-        'is_final_work' => 'boolean',
+        'content',
     ];
 
     public function program(): BelongsTo

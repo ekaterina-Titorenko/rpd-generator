@@ -331,16 +331,66 @@
         <div>
             <h2 class="card-title">3. Календарный учебный график</h2>
             <p class="card-description">
-                Раздел будет добавлен следующим этапом.
+                Распределение часов по неделям обучения.
             </p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ route('rpd-programs.schedule.index', $rpdProgram) }}" class="btn btn-secondary">
+                Редактировать график
+            </a>
         </div>
     </div>
 
     <div class="card-body">
-        <div class="empty-state">
-            <h2>Календарный график пока не заполнен</h2>
-            <p>После реализации раздела здесь будет отображаться распределение часов по неделям.</p>
-        </div>
+        @if ($rpdProgram->scheduleItems->isEmpty())
+            <div class="empty-state">
+                <h2>Календарный график пока не заполнен</h2>
+                <p>Сформируйте график на основе учебного плана и проверьте распределение часов.</p>
+            </div>
+        @else
+            @php
+                $weeks = $rpdProgram->scheduleItems->max('week_number');
+            @endphp
+
+            <div class="table-scroll schedule-scroll">
+                <table class="table schedule-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Наименование разделов</th>
+                            <th colspan="{{ $weeks }}">Недели обучения / количество часов</th>
+                        </tr>
+                        <tr>
+                            @for ($week = 1; $week <= $weeks; $week++)
+                                <th>{{ $week }} неделя</th>
+                            @endfor
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($curriculumItems as $item)
+                            @foreach (collect([$item])->merge($item->children) as $row)
+                                <tr class="schedule-row-{{ $row->type }}">
+                                    <td>
+                                        <strong>{{ $row->number }}. {{ $row->title }}</strong>
+                                    </td>
+
+                                    @for ($week = 1; $week <= $weeks; $week++)
+                                        @php
+                                            $scheduleItem = $rpdProgram->scheduleItems
+                                                ->where('rpd_curriculum_item_id', $row->id)
+                                                ->firstWhere('week_number', $week);
+                                        @endphp
+
+                                        <td>{!! nl2br(e($scheduleItem?->content)) !!}</td>
+                                    @endfor
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 </section>
 
