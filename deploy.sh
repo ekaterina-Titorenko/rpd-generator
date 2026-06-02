@@ -11,11 +11,15 @@ echo "Pull latest code"
 git fetch origin
 git reset --hard "origin/${BRANCH}"
 
+echo "Stop old containers"
+$COMPOSE down --remove-orphans || true
+docker rm -f rpd_app rpd_nginx rpd_meilisearch 2>/dev/null || true
+
 echo "Build images"
-$COMPOSE build
+$COMPOSE build --no-cache
 
 echo "Start containers"
-$COMPOSE up -d
+$COMPOSE up -d --force-recreate
 
 echo "Prepare Laravel"
 $COMPOSE exec -T app php artisan optimize:clear
