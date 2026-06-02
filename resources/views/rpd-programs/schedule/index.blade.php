@@ -105,6 +105,16 @@
                                     Теория: {{ $item->theory_hours }} ч. ·
                                     Практика: {{ $item->practice_hours }} ч.
                                 </div>
+                                @if (isset($scheduleWarnings[$item->id]))
+                                <div class="schedule-row-warning">
+                                    По графику:
+                                    Т {{ $scheduleWarnings[$item->id]['planned_theory'] }} ч.,
+                                    П {{ $scheduleWarnings[$item->id]['planned_practice'] }} ч.
+                                    Ожидается:
+                                    Т {{ $scheduleWarnings[$item->id]['expected_theory'] }} ч.,
+                                    П {{ $scheduleWarnings[$item->id]['expected_practice'] }} ч.
+                                </div>
+                                @endif
                             </td>
                             @for ($week = 1; $week <= $weeksCount; $week++)
                                 @php

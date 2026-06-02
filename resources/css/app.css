@@ -1147,3 +1147,19 @@ a {
     color: #6f5b2a;
 }
 
+
+.schedule-row-warning {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid #c8b98d;
+    border-radius: 10px;
+    background: #f7edc5;
+    color: #6f5b2a;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.schedule-row-has-warning td:first-child {
+    box-shadow: inset 4px 0 0 #c8b98d;
+}

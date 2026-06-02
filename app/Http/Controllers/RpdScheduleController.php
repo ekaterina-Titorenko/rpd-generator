@@ -19,12 +19,54 @@ class RpdScheduleController extends Controller
 
         $weeksCount = $this->calculateWeeksCount($rpdProgram);
         $recommendedWeeksCount = $this->recommendedWeeksCount($rpdProgram);
-        
+        $scheduleWarnings = $this->makeScheduleWarnings($rpdProgram);
+
         return view('rpd-programs.schedule.index', compact(
             'rpdProgram',
             'weeksCount',
-            'recommendedWeeksCount'
+            'recommendedWeeksCount',
+            'scheduleWarnings'
         ));
+    }
+    private function makeScheduleWarnings(RpdProgram $rpdProgram): array
+    {
+        $warnings = [];
+
+        foreach ($rpdProgram->curriculumItems->where('type', 'section') as $section) {
+            $items = $rpdProgram->scheduleItems
+                ->where('rpd_curriculum_item_id', $section->id);
+
+            $plannedTheory = 0;
+            $plannedPractice = 0;
+
+            foreach ($items as $item) {
+                $plannedTheory += $this->extractHoursByType((string) $item->content, 'Т');
+                $plannedPractice += $this->extractHoursByType((string) $item->content, 'П');
+            }
+
+            if (
+                $plannedTheory !== (int) $section->theory_hours
+                || $plannedPractice !== (int) $section->practice_hours
+            ) {
+                $warnings[$section->id] = [
+                    'planned_theory' => $plannedTheory,
+                    'planned_practice' => $plannedPractice,
+                    'expected_theory' => (int) $section->theory_hours,
+                    'expected_practice' => (int) $section->practice_hours,
+                ];
+            }
+        }
+
+        return $warnings;
+    }
+
+    private function extractHoursByType(string $content, string $type): int
+    {
+        preg_match_all('/' . preg_quote($type, '/') . '\s*\((\d+)\)/u', $content, $matches);
+
+        return collect($matches[1] ?? [])
+            ->map(fn($value) => (int) $value)
+            ->sum();
     }
 
     public function generate(Request $request, RpdProgram $rpdProgram)
