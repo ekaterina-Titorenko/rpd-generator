@@ -1382,3 +1382,11 @@ a {
         width: 100%;
     }
 }
+
+[data-live-search-results] {
+    transition: opacity 0.15s ease;
+}
+
+[data-live-search-results].is-loading {
+    opacity: 0.55;
+}

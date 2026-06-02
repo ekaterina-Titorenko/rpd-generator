@@ -78,6 +78,14 @@ class RpdProgramController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        if ($request->ajax()) {
+            return view('rpd-programs._table', compact(
+                'rpdPrograms',
+                'sort',
+                'direction'
+            ));
+        }
+
         return view('rpd-programs.index', compact(
             'rpdPrograms',
             'sort',
