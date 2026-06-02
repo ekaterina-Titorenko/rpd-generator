@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RpdContentSectionController;
 use App\Http\Controllers\RpdAssessmentItemController;
 use App\Http\Controllers\RpdResourceController;
+use App\Http\Controllers\RpdAuthorController;
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -82,6 +83,18 @@ Route::middleware('auth')->group(function () {
             Route::post('resources/bulk', [RpdResourceController::class, 'bulkStore'])
                 ->middleware('role:admin')
                 ->name('resources.bulk-store');
+
+            Route::get('authors', [RpdAuthorController::class, 'index'])
+                ->name('authors.index');
+
+            Route::post('authors', [RpdAuthorController::class, 'store'])
+                ->name('authors.store');
+
+            Route::put('authors/{author}', [RpdAuthorController::class, 'update'])
+                ->name('authors.update');
+
+            Route::delete('authors/{author}', [RpdAuthorController::class, 'destroy'])
+                ->name('authors.destroy');
         });
 });
 

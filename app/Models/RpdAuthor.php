@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class RpdAuthor extends Model
 {
     protected $fillable = [
         'rpd_program_id',
-        'position',
         'name',
+        'position',
+        'organization',
         'sort_order',
     ];
 

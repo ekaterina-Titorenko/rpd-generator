@@ -393,6 +393,46 @@
         @endif
     </div>
 </section>
+
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">7. Разработчики</h2>
+            <p class="card-description">
+                Сведения о разработчиках программы.
+            </p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ route('rpd-programs.authors.index', $rpdProgram) }}" class="btn btn-secondary">
+                Редактировать разработчиков
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        @if ($rpdProgram->authors->isEmpty())
+        <div class="empty-state">
+            <h2>Разработчики пока не указаны</h2>
+            <p>Добавьте сведения о разработчике программы.</p>
+        </div>
+        @else
+        <div class="document-section">
+            @foreach ($rpdProgram->authors as $author)
+            <p>
+                <strong>{{ $author->name }}</strong>
+                @if ($author->position)
+                <br>{{ $author->position }}
+                @endif
+                @if ($author->organization)
+                <br><span class="muted">{{ $author->organization }}</span>
+                @endif
+            </p>
+            @endforeach
+        </div>
+        @endif
+    </div>
+</section>
 @if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
 <section class="card">
     <div class="card-header">

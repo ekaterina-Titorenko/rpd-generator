@@ -322,6 +322,12 @@ class RpdProgramController extends Controller
             $errors[] = 'Не заполнены ресурсы информационно-телекоммуникационной сети Интернет.';
         }
 
+        $rpdProgram->loadMissing('authors');
+
+        if ($rpdProgram->authors->isEmpty()) {
+            $errors[] = 'Не указаны разработчики программы.';
+        }
+
         return $errors;
     }
 
