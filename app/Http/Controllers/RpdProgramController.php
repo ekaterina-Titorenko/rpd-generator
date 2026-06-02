@@ -10,27 +10,9 @@ class RpdProgramController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RpdProgram::query()
-            ->with('user');
-
-        if ($request->user()->role !== 'admin') {
-            $query->where('user_id', $request->user()->id);
-        }
-
         $search = trim((string) $request->get('search'));
-
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search) {
-                $builder
-                    ->where('rpd_programs.title', 'like', "%{$search}%")
-                    ->orWhere('rpd_programs.direction', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery
-                            ->where('users.name', 'like', "%{$search}%")
-                            ->orWhere('users.email', 'like', "%{$search}%");
-                    });
-            });
-        }
+        $sort = (string) $request->get('sort', 'created_at');
+        $direction = $request->get('direction', 'desc') === 'asc' ? 'asc' : 'desc';
 
         $allowedSorts = [
             'title',
@@ -41,23 +23,55 @@ class RpdProgramController extends Controller
             'created_at',
         ];
 
-        $sort = (string) $request->get('sort', 'created_at');
-        $direction = $request->get('direction', 'desc') === 'asc' ? 'asc' : 'desc';
-
         if (! in_array($sort, $allowedSorts, true)) {
             $sort = 'created_at';
         }
 
-        if ($sort === 'teacher') {
-            $query
-                ->leftJoin('users', 'users.id', '=', 'rpd_programs.user_id')
-                ->select('rpd_programs.*')
-                ->orderBy('users.name', $direction)
-                ->orderBy('rpd_programs.created_at', 'desc');
+        $sortColumn = $sort === 'teacher' ? 'teacher_name' : $sort;
+
+        if ($search !== '') {
+            $builder = RpdProgram::search($search);
+
+            if ($request->user()->role !== 'admin') {
+                $builder->where('user_id', $request->user()->id);
+            }
+
+            $builder->orderBy($sortColumn, $direction);
+
+            $ids = $builder
+                ->take(1000)
+                ->get()
+                ->pluck('id')
+                ->values();
+
+            $query = RpdProgram::query()
+                ->with('user')
+                ->whereIn('id', $ids);
+
+            if ($ids->isNotEmpty()) {
+                $idsList = $ids->implode(',');
+
+                $query->orderByRaw("CASE id {$ids->map(fn($id,$index) => "WHEN {$id} THEN {$index}")->implode(' ')} END");
+            }
         } else {
-            $query
-                ->orderBy("rpd_programs.{$sort}", $direction)
-                ->orderBy('rpd_programs.created_at', 'desc');
+            $query = RpdProgram::query()
+                ->with('user');
+
+            if ($request->user()->role !== 'admin') {
+                $query->where('user_id', $request->user()->id);
+            }
+
+            if ($sort === 'teacher') {
+                $query
+                    ->leftJoin('users', 'users.id', '=', 'rpd_programs.user_id')
+                    ->select('rpd_programs.*')
+                    ->orderBy('users.name', $direction)
+                    ->orderBy('rpd_programs.created_at', 'desc');
+            } else {
+                $query
+                    ->orderBy("rpd_programs.{$sort}", $direction)
+                    ->orderBy('rpd_programs.created_at', 'desc');
+            }
         }
 
         $rpdPrograms = $query
@@ -69,6 +83,21 @@ class RpdProgramController extends Controller
             'sort',
             'direction'
         ));
+    }
+
+    private function directionLabelSearchSql(): string
+    {
+        return "
+        LOWER(
+            CASE rpd_programs.direction
+                WHEN 'technical' THEN 'техническая technical'
+                WHEN 'science' THEN 'естественно-научная естественно научная естественнонаучная science natural'
+                WHEN 'social' THEN 'социально-гуманитарная социально гуманитарная социальногуманитарная social humanitarian'
+                WHEN 'social_humanitarian' THEN 'социально-гуманитарная социально гуманитарная социальногуманитарная social humanitarian'
+                ELSE rpd_programs.direction
+            END
+        ) LIKE ?
+    ";
     }
 
     public function create()

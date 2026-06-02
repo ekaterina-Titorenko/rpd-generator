@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 
 class RpdProgram extends Model
 {
+
+    use Searchable;
+
     protected $fillable = [
         'user_id',
         'title',
@@ -126,5 +130,24 @@ class RpdProgram extends Model
             'mixed' => 'очная и дистанционная',
             default => 'очная и дистанционная',
         };
+    }
+
+    public function toSearchableArray(): array
+    {
+        $this->loadMissing('user');
+
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'direction' => $this->direction,
+            'direction_label' => $this->direction_label,
+            'year' => $this->year,
+            'status' => $this->status,
+            'status_label' => $this->status_label,
+            'teacher_name' => $this->user?->name,
+            'teacher_email' => $this->user?->email,
+            'created_at' => $this->created_at?->timestamp,
+            'user_id' => $this->user_id,
+        ];
     }
 }
