@@ -1020,3 +1020,14 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+.readiness-grid-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 14px;
+}
+
+@media (max-width: 980px) {
+    .readiness-grid-compact {
+        grid-template-columns: 1fr;
+    }
+}

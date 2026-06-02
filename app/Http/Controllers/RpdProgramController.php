@@ -135,7 +135,9 @@ class RpdProgramController extends Controller
             ],
         ];
 
-        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems', 'readiness'));
+        $isReadyForReview = collect($readiness)->every(fn ($item) => $item['is_ready']);
+
+        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems', 'readiness', 'isReadyForReview'));
     }
 
     public function edit(Request $request, RpdProgram $rpdProgram)

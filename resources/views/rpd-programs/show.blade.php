@@ -464,12 +464,13 @@
 <section class="card">
     <div class="card-header">
         <div>
-            <h2 class="card-title">Отправка на проверку</h2>
+            <h2 class="card-title">Проверка и отправка</h2>
             <p class="card-description">
-                После отправки администратор сможет проверить РПД, оставить комментарий и принять решение.
+                Перед отправкой РПД должна быть полностью заполнена.
             </p>
         </div>
 
+        @if ($isReadyForReview)
         <form method="POST" action="{{ route('rpd-programs.submit', $rpdProgram) }}">
             @csrf
             @method('PATCH')
@@ -478,7 +479,31 @@
                 Отправить на проверку
             </button>
         </form>
+        @endif
     </div>
+
+    @unless ($isReadyForReview)
+    <div class="card-body">
+        <div class="alert alert-warning">
+            РПД пока нельзя отправить на проверку. Заполните обязательные разделы:
+        </div>
+
+        <div class="readiness-grid readiness-grid-compact">
+            @foreach ($readiness as $item)
+            @unless ($item['is_ready'])
+            <a href="{{ $item['url'] }}" class="readiness-item readiness-item-warning">
+                <div class="readiness-status">!</div>
+
+                <div>
+                    <strong>{{ $item['title'] }}</strong>
+                    <p>{{ $item['message'] }}</p>
+                </div>
+            </a>
+            @endunless
+            @endforeach
+        </div>
+    </div>
+    @endunless
 </section>
 @endif
 
