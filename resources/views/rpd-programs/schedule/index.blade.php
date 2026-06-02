@@ -11,7 +11,7 @@
         </div>
 
         <div class="actions">
-            <a href="{{ route('rpd-programs.show', $rpdProgram) }}" class="btn btn-secondary">К РПД</a>
+            <a href="{{ route('rpd-programs.show', $rpdProgram) }}#section-schedule" class="btn btn-secondary">К РПД</a>
 
             <form method="POST" action="{{ route('rpd-programs.schedule.generate', $rpdProgram) }}">
                 @csrf
@@ -96,7 +96,7 @@
                         @foreach ($rpdProgram->curriculumItems->where('type', 'section') as $item)
                         @continue(! in_array($item->type, ['section', 'topic'], true))
 
-                        <tr class="schedule-row-{{ $item->type }}">
+                        <tr class="schedule-row-{{ $item->type }} {{ isset($scheduleWarnings[$item->id]) ? 'schedule-row-has-warning' : '' }}">
                             <td>
                                 <strong>{{ $item->number }}. {{ $item->title }}</strong>
 

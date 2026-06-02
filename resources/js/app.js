@@ -71,10 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const delay = eventName === 'input' ? 900 : 150;
 
+            sessionStorage.setItem('rpdScrollY', String(window.scrollY));
+            sessionStorage.setItem('rpdPathname', window.location.pathname);
+
             autosubmitTimers.set(form, setTimeout(() => {
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();
                 } else {
+
                     form.submit();
                 }
             }, delay));
@@ -107,4 +111,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sourceTypeSelect.addEventListener('change', toggleSourceFields);
     toggleSourceFields();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedScrollY = sessionStorage.getItem('rpdScrollY');
+    const savedPathname = sessionStorage.getItem('rpdPathname');
+
+    if (!savedScrollY || savedPathname !== window.location.pathname) {
+        return;
+    }
+
+    sessionStorage.removeItem('rpdScrollY');
+    sessionStorage.removeItem('rpdPathname');
+
+    window.requestAnimationFrame(() => {
+        window.scrollTo({
+            top: Number(savedScrollY),
+            behavior: 'instant',
+        });
+    });
 });

@@ -1,7 +1,7 @@
 @extends('layouts.app', ['title' => $rpdProgram->title])
 
 @section('content')
-<section class="card">
+<section class="card" id="section-general">
     <div class="card-header">
         <div>
             <h2 class="card-title">{{ $rpdProgram->title }}</h2>
@@ -108,7 +108,7 @@
 </section>
 @endif
 @if (auth()->user()->role === 'admin' && $rpdProgram->status !== 'submitted')
-<section class="card">
+<section class="card" id="section-review">
     <div class="card-header">
         <div>
             <h2 class="card-title">Проверка администратором</h2>
@@ -157,7 +157,7 @@
     </div>
 </section>
 @endif
-<section class="card">
+<section class="card" id="section-readiness">
     <div class="card-header">
         <div>
             <h2 class="card-title">Готовность РПД</h2>
@@ -184,7 +184,7 @@
         @endforeach
     </div>
 </section>
-<section class="card">
+<section class="card" id="section-characteristics">
     <div class="card-header">
         <div>
             <h2 class="card-title">1. Основные параметры программы</h2>
@@ -212,7 +212,7 @@
 
 </section>
 
-<section class="card">
+<section class="card" id="section-curriculum">
     <div class="card-header">
         <div>
             <h2 class="card-title">2. Учебный план</h2>
@@ -326,7 +326,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="section-schedule">
     <div class="card-header">
         <div>
             <h2 class="card-title">3. Календарный учебный график</h2>
@@ -409,7 +409,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="section-content">
     <div class="card-header">
         <div>
             <h2 class="card-title">4. Содержание учебного плана</h2>
@@ -443,7 +443,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="section-assessment">
     <div class="card-header">
         <div>
             <h2 class="card-title">5. Оценочные материалы</h2>
@@ -483,7 +483,7 @@
         @endif
     </div>
 </section>
-<section class="card">
+<section class="card" id="section-resources">
     <div class="card-header">
         <div>
             <h2 class="card-title">6. Литература и интернет-ресурсы</h2>
@@ -536,7 +536,7 @@
     </div>
 </section>
 
-<section class="card">
+<section class="card" id="section-authors">
     <div class="card-header">
         <div>
             <h2 class="card-title">7. Разработчики</h2>
@@ -576,7 +576,7 @@
     </div>
 </section>
 @if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
-<section class="card">
+<section class="card" id="section-review">
     <div class="card-header">
         <div>
             <h2 class="card-title">Проверка и отправка</h2>
@@ -622,7 +622,7 @@
 </section>
 @endif
 @if (auth()->user()->role === 'admin' && $rpdProgram->status === 'submitted')
-<section class="card">
+<section class="card" id="section-review">
     <div class="card-header">
         <div>
             <h2 class="card-title">Проверка администратором</h2>
