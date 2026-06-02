@@ -1,3 +1,6 @@
+/* =========================================================
+   Design tokens
+   ========================================================= */
 :root {
     --bg: #f7f1e2;
     --surface: #fffaf0;
@@ -12,7 +15,6 @@
 
     --accent: #f25a38;
     --accent-hover: #d94625;
-
     --danger: #8c322a;
 
     --success-bg: #f2e3b3;
@@ -25,11 +27,22 @@
     --warning-text: #8c322a;
     --warning-border: #d9b36d;
 
+    --info-bg: #f7edc5;
+    --info-text: #6f5b2a;
+    --info-border: #c8b98d;
+
     --radius: 14px;
 }
 
+/* =========================================================
+   Base layout
+   ========================================================= */
 * {
     box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
@@ -64,9 +77,9 @@ a {
 }
 
 .app-kicker {
+    margin-bottom: 4px;
     color: var(--muted);
     font-size: 13px;
-    margin-bottom: 4px;
 }
 
 .app-header h1 {
@@ -77,9 +90,9 @@ a {
 
 .app-nav {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .app-nav a,
@@ -91,8 +104,8 @@ a {
     border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--surface);
-    text-decoration: none;
     color: var(--text);
+    text-decoration: none;
 }
 
 .app-user {
@@ -105,11 +118,24 @@ a {
     gap: 18px;
 }
 
+/* =========================================================
+   Cards, actions, buttons
+   ========================================================= */
+.card,
+.card-body {
+    max-width: 100%;
+}
+
 .card {
-    background: var(--surface);
+    overflow: hidden;
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    background: var(--surface);
     box-shadow: 0 10px 24px rgba(42, 24, 20, 0.07);
+}
+
+.card[id] {
+    scroll-margin-top: 24px;
 }
 
 .card-header {
@@ -138,9 +164,9 @@ a {
 
 .actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .btn {
@@ -167,15 +193,15 @@ a {
 }
 
 .btn-secondary {
+    border-color: var(--border);
     background: var(--surface);
     color: var(--text);
-    border-color: var(--border);
 }
 
 .btn-danger {
+    border-color: #c98f84;
     background: #ffffff;
     color: var(--danger);
-    border-color: #c98f84;
 }
 
 .btn-compact {
@@ -202,6 +228,45 @@ a {
     background: #f9ded8;
 }
 
+/* =========================================================
+   Tables and internal scrolling
+   ========================================================= */
+.table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.card-body > .table-scroll {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.table-scroll table {
+    width: max-content;
+    min-width: 100%;
+}
+
+.table-scroll .table {
+    margin-bottom: 0;
+}
+
+.table-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: var(--surface-muted);
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--border);
+}
+
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -216,27 +281,52 @@ a {
 }
 
 .table th {
+    background: var(--surface-muted);
     color: var(--muted);
     font-size: 13px;
     font-weight: 600;
-    background: var(--surface-muted);
 }
 
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions-inline {
+    align-items: center;
+    justify-content: center;
+}
+
+.table-row-warning td {
+    background: var(--warning-bg) !important;
+}
+
+.table-note-row td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--warning-border);
+    background: var(--warning-bg);
+    color: var(--warning-text);
+    font-size: 14px;
+}
+
+/* =========================================================
+   Badges, alerts, empty states
+   ========================================================= */
 .badge {
     display: inline-flex;
     align-items: center;
     padding: 4px 9px;
+    border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--surface-muted);
-    border: 1px solid var(--border);
     color: var(--muted);
     font-size: 13px;
 }
 
 .alert {
     padding: 14px 16px;
-    border-radius: 12px;
     border: 1px solid transparent;
+    border-radius: 12px;
 }
 
 .alert ul {
@@ -245,33 +335,45 @@ a {
 }
 
 .alert-success {
+    border-color: #b7a766;
     background: var(--success-bg);
     color: var(--success-text);
-    border-color: #b7a766;
 }
 
 .alert-error {
+    border-color: #d49a90;
     background: var(--error-bg);
     color: var(--error-text);
-    border-color: #d49a90;
 }
 
 .alert-warning {
     position: relative;
     margin-top: 18px;
     padding: 18px 20px 18px 24px;
-    background: #f9ded8;
-    color: #8c322a;
     border: 2px solid #f25a38;
     border-left-width: 8px;
+    background: #f9ded8;
+    color: #8c322a;
     font-weight: 700;
     box-shadow: 0 8px 18px rgba(140, 50, 42, 0.12);
 }
 
+.alert-info {
+    border-color: var(--info-border);
+    background: var(--info-bg);
+    color: var(--info-text);
+}
+
+.card-body > .alert + .alert,
+.card-body > .alert + .schedule-weeks-panel,
+.card-body > .schedule-weeks-panel + .alert {
+    margin-top: 14px;
+}
+
 .empty-state {
     padding: 34px 22px;
-    text-align: center;
     color: var(--muted);
+    text-align: center;
 }
 
 .empty-state h2 {
@@ -284,6 +386,15 @@ a {
     color: var(--muted);
 }
 
+.field-hint {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   Forms
+   ========================================================= */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -300,21 +411,21 @@ a {
 }
 
 .form-field label {
+    color: var(--text);
     font-size: 14px;
     font-weight: 600;
-    color: var(--text);
 }
 
 .form-field input,
 .form-field select,
 .form-field textarea {
     width: 100%;
+    padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: #ffffff;
     color: var(--text);
     font: inherit;
-    padding: 10px 12px;
 }
 
 .form-field textarea {
@@ -325,10 +436,13 @@ a {
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {
-    outline: 2px solid rgba(242, 90, 56, 0.18);
     border-color: var(--primary);
+    outline: 2px solid rgba(242, 90, 56, 0.18);
 }
 
+/* =========================================================
+   Dashboard and details
+   ========================================================= */
 .details-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -392,8 +506,8 @@ a {
 }
 
 .constructor-number {
-    flex: 0 0 auto;
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
     width: 32px;
@@ -448,6 +562,9 @@ a {
     color: #8c322a;
 }
 
+/* =========================================================
+   Curriculum editor
+   ========================================================= */
 .curriculum-add-form {
     display: grid;
     grid-template-columns:
@@ -456,6 +573,15 @@ a {
     align-items: end;
 }
 
+.curriculum-add-form:not(.has-topic-parent) {
+    grid-template-columns:
+        minmax(130px, 150px) minmax(280px, 1fr) minmax(100px, 120px) minmax(100px, 120px) minmax(180px, 240px) 140px;
+}
+
+.curriculum-add-form .form-field,
+.curriculum-add-form input,
+.curriculum-add-form select,
+.curriculum-add-form textarea,
 .curriculum-title-field {
     min-width: 0;
 }
@@ -466,32 +592,13 @@ a {
 
 .curriculum-add-actions {
     display: flex;
-    justify-content: flex-end;
     align-items: flex-end;
+    justify-content: flex-end;
     padding-left: 0;
 }
 
 .curriculum-add-actions .btn {
     width: 100%;
-}
-
-.curriculum-add-form .form-field {
-    min-width: 0;
-}
-
-.curriculum-add-form input,
-.curriculum-add-form select,
-.curriculum-add-form textarea {
-    min-width: 0;
-}
-
-.table-scroll {
-    overflow-x: auto;
-}
-
-.curriculum-add-form:not(.has-topic-parent) {
-    grid-template-columns:
-        minmax(130px, 150px) minmax(280px, 1fr) minmax(100px, 120px) minmax(100px, 120px) minmax(180px, 240px) 140px;
 }
 
 .curriculum-table {
@@ -530,12 +637,12 @@ a {
 .curriculum-table input {
     width: 100%;
     min-height: 36px;
+    padding: 8px 10px;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: #ffffff;
     color: var(--text);
     font: inherit;
-    padding: 8px 10px;
 }
 
 .curriculum-table textarea,
@@ -543,21 +650,21 @@ a {
     width: 100%;
     min-height: 36px;
     max-height: 180px;
+    padding: 8px 10px;
+    overflow: hidden;
+    resize: vertical;
     border: 1px solid var(--border);
     border-radius: 8px;
     background: #ffffff;
     color: var(--text);
     font: inherit;
     line-height: 1.35;
-    padding: 8px 10px;
-    resize: vertical;
-    overflow: hidden;
 }
 
 .curriculum-table textarea:focus,
 .curriculum-add-form textarea:focus {
-    outline: 2px solid rgba(242, 90, 56, 0.18);
     border-color: var(--primary);
+    outline: 2px solid rgba(242, 90, 56, 0.18);
 }
 
 .curriculum-number-cell {
@@ -565,7 +672,8 @@ a {
     white-space: nowrap;
 }
 
-.curriculum-child-title {
+.curriculum-child-title,
+.curriculum-row-topic .curriculum-child-title {
     padding-left: 28px !important;
 }
 
@@ -574,28 +682,6 @@ a {
     align-items: center;
     min-height: 36px;
     font-weight: 700;
-}
-
-.table-row-warning td {
-    background: var(--warning-bg) !important;
-}
-
-.table-note-row td {
-    padding: 10px 12px;
-    background: var(--warning-bg);
-    color: var(--warning-text);
-    border-bottom: 1px solid var(--warning-border);
-    font-size: 14px;
-}
-
-.table-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.table-actions-inline {
-    align-items: center;
-    justify-content: center;
 }
 
 .curriculum-table td:last-child {
@@ -623,12 +709,9 @@ a {
     background: #fffaf0;
 }
 
-.curriculum-row-topic .curriculum-child-title {
-    padding-left: 28px !important;
-}
-
-.curriculum-row-final_work td {
-    background: #f2e3b3 !important;
+.curriculum-row-final_work td,
+.curriculum-total-row td {
+    background: var(--surface-muted) !important;
 }
 
 .curriculum-row-final_work .curriculum-number-cell {
@@ -637,58 +720,12 @@ a {
 }
 
 .curriculum-total-row td {
-    background: var(--surface-muted) !important;
     font-weight: 700;
 }
 
-.field-hint {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.35;
-}
-
-@media (max-width: 1180px) {
-    .curriculum-add-form {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .curriculum-add-actions {
-        justify-content: flex-start;
-        padding-left: 0;
-    }
-}
-
-@media (max-width: 980px) {
-    .constructor-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 720px) {
-    .app {
-        width: min(100% - 20px, 1180px);
-        padding-top: 16px;
-    }
-
-    .app-header,
-    .card-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .form-grid,
-    .details-grid,
-    .summary-grid,
-    .curriculum-add-form,
-    .constructor-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .table {
-        font-size: 14px;
-    }
-}
-
+/* =========================================================
+   Review and document overview
+   ========================================================= */
 .review-comment {
     padding: 16px;
     border: 1px solid var(--border);
@@ -707,8 +744,8 @@ a {
 
 .review-buttons {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
 .document-section {
@@ -722,9 +759,26 @@ a {
     font-size: 17px;
 }
 
+.document-section h4 {
+    margin: 6px 0 0;
+    font-size: 15px;
+}
+
 .document-section p {
     margin: 0;
     white-space: pre-line;
+}
+
+.document-section ul,
+.document-section ol {
+    margin: 0;
+    padding-left: 22px;
+}
+
+.document-section li,
+.document-section ol li {
+    margin-bottom: 8px;
+    line-height: 1.5;
 }
 
 .overview-table input,
@@ -742,21 +796,9 @@ a {
     margin-bottom: 18px;
 }
 
-.document-section h4 {
-    margin: 6px 0 0;
-    font-size: 15px;
-}
-
-.document-section ul {
-    margin: 0;
-    padding-left: 22px;
-}
-
-.document-section li {
-    margin-bottom: 6px;
-    line-height: 1.5;
-}
-
+/* =========================================================
+   Content editor
+   ========================================================= */
 .content-editor-list {
     display: grid;
     gap: 16px;
@@ -773,9 +815,9 @@ a {
 
 .content-editor-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
-    align-items: flex-start;
 }
 
 .content-editor-header p {
@@ -783,6 +825,9 @@ a {
     color: var(--muted);
 }
 
+/* =========================================================
+   Assessment blocks
+   ========================================================= */
 .assessment-blocks {
     display: grid;
     gap: 16px;
@@ -799,9 +844,9 @@ a {
 
 .assessment-block-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
-    align-items: flex-start;
 }
 
 .assessment-block-header h3 {
@@ -814,9 +859,26 @@ a {
     color: var(--muted);
 }
 
+/* =========================================================
+   Resources editor
+   ========================================================= */
 .resource-add-form {
     display: grid;
     grid-template-columns: 260px minmax(260px, 1fr) minmax(220px, 320px) 120px;
+    gap: 16px;
+    align-items: end;
+}
+
+.resource-builder-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.resource-bulk-form {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 160px;
     gap: 16px;
     align-items: end;
 }
@@ -836,6 +898,10 @@ a {
 }
 
 .resource-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
     padding: 16px;
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -849,33 +915,6 @@ a {
     align-items: end;
 }
 
-.document-section ol {
-    margin: 0;
-    padding-left: 22px;
-}
-
-.document-section ol li {
-    margin-bottom: 8px;
-    line-height: 1.5;
-}
-
-@media (max-width: 980px) {
-
-    .resource-add-form,
-    .resource-card-grid {
-        grid-template-columns: 1fr;
-    }
-
-
-}
-
-.resource-builder-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    align-items: end;
-}
-
 .resource-preview {
     display: grid;
     gap: 10px;
@@ -886,26 +925,9 @@ a {
     line-height: 1.55;
 }
 
-.resource-card {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.resource-bulk-form {
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr) 160px;
-    gap: 16px;
-    align-items: end;
-}
-
-@media (max-width: 980px) {
-    .resource-bulk-form {
-        grid-template-columns: 1fr;
-    }
-}
-
+/* =========================================================
+   Authors editor
+   ========================================================= */
 .author-add-form {
     display: grid;
     grid-template-columns: minmax(260px, 1fr) minmax(220px, 320px) minmax(220px, 320px) 180px;
@@ -941,30 +963,30 @@ a {
     align-items: end;
 }
 
-@media (max-width: 980px) {
-
-    .author-add-form,
-    .author-card-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
+/* =========================================================
+   Readiness overview
+   ========================================================= */
 .readiness-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 12px;
 }
 
+.readiness-grid-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 14px;
+}
+
 .readiness-item {
     display: flex;
-    gap: 12px;
     align-items: flex-start;
+    gap: 12px;
     padding: 14px;
     border: 1px solid var(--border);
     border-radius: 14px;
-    text-decoration: none;
-    color: var(--text);
     background: var(--surface-muted);
+    color: var(--text);
+    text-decoration: none;
 }
 
 .readiness-item strong {
@@ -981,9 +1003,9 @@ a {
 
 .readiness-status {
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
     width: 28px;
     height: 28px;
     border-radius: 999px;
@@ -1009,34 +1031,18 @@ a {
     color: #ffffff;
 }
 
-@media (max-width: 1180px) {
-    .readiness-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 720px) {
-    .readiness-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.readiness-grid-compact {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 14px;
-}
-
-@media (max-width: 980px) {
-    .readiness-grid-compact {
-        grid-template-columns: 1fr;
-    }
-}
-
+/* =========================================================
+   Schedule editor and preview
+   ========================================================= */
 .schedule-scroll {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .schedule-table {
+    width: max-content;
     min-width: 980px;
 }
 
@@ -1066,14 +1072,14 @@ a {
 }
 
 .schedule-row-topic {
-    background: #f2e3b3;
+    background: var(--surface-muted);
 }
 
 .schedule-weeks-panel {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 24px;
-    align-items: center;
     padding: 20px;
     margin: 18px 0;
     border: 1px solid var(--border);
@@ -1114,64 +1120,43 @@ a {
 .schedule-weeks-input input {
     width: 100%;
     min-height: 46px;
-    text-align: center;
     font-size: 18px;
     font-weight: 700;
+    text-align: center;
 }
 
 .schedule-weeks-form .btn {
-    min-height: 46px;
     width: 100%;
+    min-height: 46px;
 }
 
-@media (max-width: 720px) {
-    .schedule-weeks-panel {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .schedule-weeks-form {
-        grid-template-columns: 1fr;
-    }
+.schedule-hours-hint {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
 }
-
-.card-body > .alert + .alert,
-.card-body > .alert + .schedule-weeks-panel,
-.card-body > .schedule-weeks-panel + .alert {
-    margin-top: 14px;
-}
-
-.alert-info {
-    border-color: #c8b98d;
-    background: #f7edc5;
-    color: #6f5b2a;
-}
-
 
 .schedule-row-warning {
     margin-top: 8px;
     padding: 8px 10px;
-    border: 1px solid #c8b98d;
+    border: 1px solid var(--info-border);
     border-radius: 10px;
-    background: #f7edc5;
-    color: #6f5b2a;
+    background: var(--info-bg);
+    color: var(--info-text);
     font-size: 12px;
     font-weight: 600;
     line-height: 1.35;
 }
 
 .schedule-row-has-warning td:first-child {
-    box-shadow: inset 4px 0 0 #c8b98d;
+    box-shadow: inset 4px 0 0 var(--info-border);
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
-.card[id] {
-    scroll-margin-top: 24px;
-}
-
+/* =========================================================
+   Printable preview
+   ========================================================= */
 .print-document {
     display: grid;
     gap: 18px;
@@ -1194,9 +1179,9 @@ html {
 }
 
 .print-page h1 {
-    text-align: center;
     margin: 0 0 24px;
     font-size: 24px;
+    text-align: center;
 }
 
 .print-page h2 {
@@ -1216,27 +1201,101 @@ html {
 
 .print-table {
     width: 100%;
-    border-collapse: collapse;
     margin-top: 12px;
+    border-collapse: collapse;
     font-size: 13px;
 }
 
 .print-table th,
 .print-table td {
-    border: 1px solid #1f2933;
     padding: 7px;
+    border: 1px solid #1f2933;
     vertical-align: top;
 }
 
 .print-table th {
-    text-align: center;
     font-weight: 700;
+    text-align: center;
 }
 
 .print-schedule-table {
     font-size: 11px;
 }
 
+/* =========================================================
+   Responsive rules
+   ========================================================= */
+@media (max-width: 1180px) {
+    .curriculum-add-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .curriculum-add-actions {
+        justify-content: flex-start;
+        padding-left: 0;
+    }
+
+    .readiness-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 980px) {
+    .constructor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .resource-add-form,
+    .resource-card-grid,
+    .resource-bulk-form,
+    .author-add-form,
+    .author-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .readiness-grid-compact {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .app {
+        width: min(100% - 20px, 1180px);
+        padding-top: 16px;
+    }
+
+    .app-header,
+    .card-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-grid,
+    .details-grid,
+    .summary-grid,
+    .curriculum-add-form,
+    .constructor-grid,
+    .readiness-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .table {
+        font-size: 14px;
+    }
+
+    .schedule-weeks-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .schedule-weeks-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   Print rules
+   ========================================================= */
 @media print {
     body {
         background: #ffffff;
