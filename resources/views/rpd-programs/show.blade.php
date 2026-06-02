@@ -88,6 +88,7 @@
     </div>
 </section>
 
+
 @if ($rpdProgram->review_comment)
 <section class="card">
     <div class="card-header">
@@ -106,7 +107,33 @@
     </div>
 </section>
 @endif
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Готовность РПД</h2>
+            <p class="card-description">
+                Основные разделы, которые нужно заполнить перед отправкой на проверку.
+            </p>
+        </div>
+    </div>
 
+    <div class="card-body readiness-grid">
+        @foreach ($readiness as $item)
+        <a
+            href="{{ $item['url'] }}"
+            class="readiness-item {{ $item['is_ready'] ? 'readiness-item-ready' : 'readiness-item-warning' }}">
+            <div class="readiness-status">
+                {{ $item['is_ready'] ? '✓' : '!' }}
+            </div>
+
+            <div>
+                <strong>{{ $item['title'] }}</strong>
+                <p>{{ $item['is_ready'] ? 'Раздел заполнен.' : $item['message'] }}</p>
+            </div>
+        </a>
+        @endforeach
+    </div>
+</section>
 <section class="card">
     <div class="card-header">
         <div>

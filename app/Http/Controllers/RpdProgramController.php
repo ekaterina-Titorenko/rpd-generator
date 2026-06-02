@@ -81,7 +81,61 @@ class RpdProgramController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems'));
+        $sections = $rpdProgram->curriculumItems->where('type', 'section');
+
+        $sectionTotalHours = (int) $sections->sum('total_hours');
+
+        $readiness = [
+            [
+                'title' => 'Учебный план',
+                'is_ready' => $sections->isNotEmpty()
+                    && $sectionTotalHours === (int) $rpdProgram->total_hours,
+                'message' => $sections->isEmpty()
+                    ? 'Не добавлены разделы учебного плана.'
+                    : (
+                        $sectionTotalHours === (int) $rpdProgram->total_hours
+                        ? 'Заполнен.'
+                        : "Сумма часов по разделам: {$sectionTotalHours} из {$rpdProgram->total_hours}."
+                    ),
+                'url' => route('rpd-programs.curriculum.index', $rpdProgram),
+            ],
+            [
+                'title' => 'Содержание учебного плана',
+                'is_ready' => $sections->isNotEmpty()
+                    && $sections->every(function ($section) use ($rpdProgram) {
+                        $contentSection = $rpdProgram->contentSections
+                            ->firstWhere('rpd_curriculum_item_id', $section->id);
+
+                        return $contentSection && filled($contentSection->content);
+                    }),
+                'message' => 'Для каждого раздела должно быть заполнено содержание.',
+                'url' => route('rpd-programs.content.index', $rpdProgram),
+            ],
+            [
+                'title' => 'Оценочные материалы',
+                'is_ready' => filled($rpdProgram->control_survey_materials)
+                    && filled($rpdProgram->final_practical_work_materials)
+                    && filled($rpdProgram->project_topics),
+                'message' => 'Нужно заполнить три блока оценочных материалов.',
+                'url' => route('rpd-programs.assessment.index', $rpdProgram),
+            ],
+            [
+                'title' => 'Литература и интернет-ресурсы',
+                'is_ready' => $rpdProgram->resources->where('type', 'main_recommended')->isNotEmpty()
+                    && $rpdProgram->resources->where('type', 'additional')->isNotEmpty()
+                    && $rpdProgram->resources->where('type', 'internet')->isNotEmpty(),
+                'message' => 'Нужен хотя бы один источник в каждом разделе.',
+                'url' => route('rpd-programs.resources.index', $rpdProgram),
+            ],
+            [
+                'title' => 'Разработчики',
+                'is_ready' => $rpdProgram->authors->isNotEmpty(),
+                'message' => 'Нужно указать хотя бы одного разработчика.',
+                'url' => route('rpd-programs.authors.index', $rpdProgram),
+            ],
+        ];
+
+        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems', 'readiness'));
     }
 
     public function edit(Request $request, RpdProgram $rpdProgram)
