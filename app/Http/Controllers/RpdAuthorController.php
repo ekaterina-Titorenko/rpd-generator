@@ -14,12 +14,28 @@ class RpdAuthorController extends Controller
 
         $rpdProgram->load('authors');
 
-        $defaultAuthor = $this->findLastAuthorForUser($request, $rpdProgram);
+        if (
+            $request->user()->role === 'teacher'
+            && $rpdProgram->authors->isEmpty()
+        ) {
+            $lastAuthor = $this->findLastAuthorForUser($request, $rpdProgram);
 
-        return view('rpd-programs.authors.index', compact(
-            'rpdProgram',
-            'defaultAuthor'
-        ));
+            if ($lastAuthor) {
+                $rpdProgram->authors()->create([
+                    'name' => $lastAuthor->name,
+                    'position' => $lastAuthor->position,
+                    'organization' => $lastAuthor->organization,
+                    'sort_order' => 1,
+                ]);
+
+                $rpdProgram->load('authors');
+            }
+        }
+
+        return view('rpd-programs.authors.index', [
+            'rpdProgram' => $rpdProgram,
+            'defaultAuthor' => null,
+        ]);
     }
 
     public function store(Request $request, RpdProgram $rpdProgram)
@@ -75,13 +91,12 @@ class RpdAuthorController extends Controller
 
     private function findLastAuthorForUser(Request $request, RpdProgram $rpdProgram): ?RpdAuthor
     {
-        if ($rpdProgram->authors->isNotEmpty()) {
-            return null;
-        }
-
         return RpdAuthor::query()
-            ->whereHas('program', function ($query) use ($request) {
-                $query->where('user_id', $request->user()->id);
+            ->whereNotNull('name')
+            ->whereHas('program', function ($query) use ($request, $rpdProgram) {
+                $query
+                    ->where('user_id', $request->user()->id)
+                    ->where('id', '!=', $rpdProgram->id);
             })
             ->latest('updated_at')
             ->first();
