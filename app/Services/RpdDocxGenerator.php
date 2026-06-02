@@ -43,7 +43,7 @@ class RpdDocxGenerator
             mkdir($directory, 0775, true);
         }
 
-        $filename = 'rpd_' . $rpdProgram->id . '_' . now()->format('Ymd_His') . '.docx';
+        $filename = 'РПД_' . $this->makeSafeFilename($rpdProgram->title) . '_' . now()->format('Y-m-d_H-i') . '.docx';
         $path = $directory . DIRECTORY_SEPARATOR . $filename;
 
         $processor->saveAs($path);
@@ -51,16 +51,31 @@ class RpdDocxGenerator
         return $path;
     }
 
+    private function makeSafeFilename(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return 'Без названия';
+        }
+
+        $value = preg_replace('/[\/\\\\:*?"<>|]+/u', ' ', $value);
+        $value = preg_replace('/\s+/u', ' ', $value);
+
+        return trim($value);
+    }
     private function resolveTemplatePath(RpdProgram $rpdProgram): string
     {
         $templateName = match ($rpdProgram->direction) {
             'technical' => 'technical.docx',
             'science' => 'science.docx',
             'social' => 'social.docx',
+            'social_humanitarian' => 'social.docx',
             default => 'technical.docx',
         };
 
         $path = storage_path('app/templates/rpd/' . $templateName);
+
 
         if (! file_exists($path)) {
             throw new RuntimeException("Шаблон РПД не найден: {$templateName}");
@@ -161,7 +176,7 @@ class RpdDocxGenerator
 
     private function fillContentSections(TemplateProcessor $processor, RpdProgram $rpdProgram): void
     {
-        if (! $this->hasVariable($processor, 'content_number')) {
+        if (! $this->hasVariable($processor, 'content_title')) {
             return;
         }
 
@@ -170,19 +185,17 @@ class RpdDocxGenerator
         if ($sections->isEmpty()) {
             $sections = collect([
                 (object) [
-                    'number' => '—',
                     'title' => 'Содержание учебного плана не заполнено',
                     'content' => '—',
                 ],
             ]);
         }
 
-        $processor->cloneRow('content_number', $sections->count());
+        $processor->cloneRow('content_title', $sections->count());
 
         foreach ($sections->values() as $index => $section) {
             $number = $index + 1;
 
-            $processor->setValue("content_number#{$number}", $this->cleanValue($section->number));
             $processor->setValue("content_title#{$number}", $this->cleanValue($section->title));
             $processor->setValue("content_text#{$number}", $this->cleanValue($section->content));
         }
@@ -228,7 +241,6 @@ class RpdDocxGenerator
 
         $headerCellStyle = [
             'valign' => 'center',
-            'bgColor' => 'D9D9D9',
         ];
 
         $cellStyle = [
@@ -245,6 +257,17 @@ class RpdDocxGenerator
             'spaceAfter' => 0,
         ];
 
+        $font = [
+            'name' => 'Times New Roman',
+            'size' => 10,
+        ];
+
+        $fontBold = [
+            'name' => 'Times New Roman',
+            'size' => 10,
+            'bold' => true,
+        ];
+
         $table->addRow();
 
         $table->addCell(
@@ -252,14 +275,14 @@ class RpdDocxGenerator
             array_merge($headerCellStyle, [
                 'vMerge' => 'restart',
             ])
-        )->addText('Наименование разделов', ['bold' => true], $center);
+        )->addText('Наименование разделов', $fontBold, $center);
 
         $table->addCell(
-            Converter::cmToTwip(max(6, $weeks * 2)),
+            Converter::cmToTwip(max(6, $weeks * 1.6)),
             array_merge($headerCellStyle, [
                 'gridSpan' => $weeks,
             ])
-        )->addText('Недели обучения/количество часов', ['bold' => true], $center);
+        )->addText('Недели обучения/количество часов', $fontBold, $center);
 
         $table->addRow();
 
@@ -271,19 +294,19 @@ class RpdDocxGenerator
         );
 
         for ($week = 1; $week <= $weeks; $week++) {
-            $table->addCell(Converter::cmToTwip(2), $headerCellStyle)
-                ->addText($week . ' неделя', ['bold' => true], $center);
+            $table->addCell(Converter::cmToTwip(1.6), $headerCellStyle)
+                ->addText($week . ' неделя', $fontBold, $center);
         }
 
         if ($sections->isEmpty()) {
             $table->addRow();
 
             $table->addCell(Converter::cmToTwip(6), $cellStyle)
-                ->addText('Разделы не заполнены', [], $left);
+                ->addText('Разделы не заполнены', $font, $left);
 
             for ($week = 1; $week <= $weeks; $week++) {
-                $table->addCell(Converter::cmToTwip(2), $cellStyle)
-                    ->addText('', [], $center);
+                $table->addCell(Converter::cmToTwip(1.6), $cellStyle)
+                    ->addText('', $font, $center);
             }
         }
 
@@ -291,19 +314,19 @@ class RpdDocxGenerator
             $table->addRow();
 
             $table->addCell(Converter::cmToTwip(6), $cellStyle)
-                ->addText($section->title, [], $left);
+                ->addText($section->title, $font, $left);
 
             for ($week = 1; $week <= $weeks; $week++) {
                 $scheduleItem = $rpdProgram->scheduleItems
                     ->where('rpd_curriculum_item_id', $section->id)
                     ->firstWhere('week_number', $week);
 
-                $cell = $table->addCell(Converter::cmToTwip(2), $cellStyle);
+                $cell = $table->addCell(Converter::cmToTwip(1.6), $cellStyle);
 
                 $this->addMultilineCellText(
                     $cell,
                     $scheduleItem?->content ?? '',
-                    [],
+                    $font,
                     $center
                 );
             }
