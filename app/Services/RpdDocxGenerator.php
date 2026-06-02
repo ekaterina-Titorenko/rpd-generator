@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Models\RpdProgram;
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\SimpleType\JcTable;
-use PhpOffice\PhpWord\Style\Language;
+use PhpOffice\PhpWord\Element\Cell;
+use PhpOffice\PhpWord\Element\Table;
+use PhpOffice\PhpWord\Element\TextRun;
+use PhpOffice\PhpWord\Shared\Converter;
+use PhpOffice\PhpWord\SimpleType\Jc;
+use PhpOffice\PhpWord\TemplateProcessor;
+use RuntimeException;
 
 class RpdDocxGenerator
 {
@@ -15,7 +18,7 @@ class RpdDocxGenerator
         $rpdProgram->load([
             'curriculumItems.children',
             'curriculumItems.controlForm',
-            'contentSections' => fn ($query) => $query
+            'contentSections' => fn($query) => $query
                 ->whereNotNull('rpd_curriculum_item_id')
                 ->orderBy('sort_order'),
             'scheduleItems',
@@ -23,100 +26,19 @@ class RpdDocxGenerator
             'authors',
         ]);
 
-        $curriculumItems = $rpdProgram->curriculumItems
-            ->whereNull('parent_id')
-            ->sortBy('sort_order');
+        $templatePath = $this->resolveTemplatePath($rpdProgram);
 
-        $phpWord = new PhpWord();
-        $phpWord->getSettings()->setThemeFontLang(new Language('ru-RU'));
+        $processor = new TemplateProcessor($templatePath);
 
-        $phpWord->setDefaultFontName('Times New Roman');
-        $phpWord->setDefaultFontSize(12);
-
-        $phpWord->addTitleStyle(1, ['bold' => true, 'size' => 16], ['alignment' => 'center', 'spaceAfter' => 240]);
-        $phpWord->addTitleStyle(2, ['bold' => true, 'size' => 14], ['spaceBefore' => 240, 'spaceAfter' => 120]);
-        $phpWord->addTitleStyle(3, ['bold' => true, 'size' => 12], ['spaceBefore' => 180, 'spaceAfter' => 80]);
-
-        $section = $phpWord->addSection([
-            'marginTop' => 1134,
-            'marginRight' => 850,
-            'marginBottom' => 1134,
-            'marginLeft' => 1134,
-        ]);
-
-        $section->addTitle($rpdProgram->title, 1);
-
-        $this->addParagraph($section, 'Направленность: ' . ($rpdProgram->direction_label ?? $rpdProgram->direction));
-        $this->addParagraph($section, 'Уровень сложности: ' . $rpdProgram->complexity_level);
-        $this->addParagraph($section, 'Год: ' . $rpdProgram->year);
-        $this->addParagraph($section, 'Объем: ' . $rpdProgram->total_hours . ' академических часов');
-
-        $section->addTitle('1. Основные параметры программы', 2);
-        $this->addSubsection($section, 'Форма обучения', $rpdProgram->education_form);
-        $this->addSubsection($section, 'Режим занятий', $rpdProgram->study_mode);
-        $this->addSubsection($section, 'Категория слушателей', $rpdProgram->students_category);
-        $this->addSubsection($section, 'Требования к уровню подготовки слушателей', $rpdProgram->preparation_requirements);
-
-        $section->addTitle('2. Учебный план', 2);
-        $this->addCurriculumTable($section, $curriculumItems);
-
-        $section->addTitle('3. Календарный учебный график', 2);
-        $this->addScheduleTable($section, $curriculumItems, $rpdProgram);
-
-        $section->addTitle('4. Содержание учебного плана', 2);
-        if ($rpdProgram->contentSections->isEmpty()) {
-            $this->addParagraph($section, 'Содержание учебного плана не заполнено.');
-        } else {
-            foreach ($rpdProgram->contentSections as $contentSection) {
-                $section->addTitle($contentSection->number . '. ' . $contentSection->title, 3);
-                $this->addParagraph($section, $contentSection->content);
-            }
-        }
-
-        $section->addTitle('5. Оценочные материалы', 2);
-        $this->addSubsection($section, 'Материалы для проведения контрольных опросов', $rpdProgram->control_survey_materials);
-        $this->addSubsection($section, 'Материалы для проведения итоговой практической работы', $rpdProgram->final_practical_work_materials);
-        $this->addSubsection($section, 'Типовые темы проектных работ', $rpdProgram->project_topics);
-
-        $section->addTitle('6. Литература и интернет-ресурсы', 2);
-        foreach ([
-            'main_recommended' => 'Список основной рекомендуемой литературы',
-            'additional' => 'Дополнительная литература',
-            'internet' => 'Ресурсы информационно-телекоммуникационной сети Интернет',
-        ] as $type => $label) {
-            $resources = $rpdProgram->resources->where('type', $type);
-
-            if ($resources->isEmpty()) {
-                continue;
-            }
-
-            $section->addTitle($label, 3);
-
-            foreach ($resources->values() as $index => $resource) {
-                $this->addParagraph($section, ($index + 1) . '. ' . $resource->title);
-            }
-        }
-
-        $section->addTitle('7. Разработчики', 2);
-        if ($rpdProgram->authors->isEmpty()) {
-            $this->addParagraph($section, 'Разработчики не указаны.');
-        } else {
-            foreach ($rpdProgram->authors as $author) {
-                $text = $author->name;
-
-                if ($author->position) {
-                    $text .= ', ' . $author->position;
-                }
-
-                if ($author->organization) {
-                    $text .= ', ' . $author->organization;
-                }
-
-                $this->addParagraph($section, $text);
-            }
-        }
+        $this->fillCommonFields($processor, $rpdProgram);
+        $this->fillCurriculumTable($processor, $rpdProgram);
+        $this->fillContentSections($processor, $rpdProgram);
+        $this->fillScheduleTable($processor, $rpdProgram);
+        $this->fillResources($processor, $rpdProgram);
+        $this->fillAuthors($processor, $rpdProgram);
 
         $directory = storage_path('app/generated/rpd');
+
         if (! is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
@@ -124,103 +46,422 @@ class RpdDocxGenerator
         $filename = 'rpd_' . $rpdProgram->id . '_' . now()->format('Ymd_His') . '.docx';
         $path = $directory . DIRECTORY_SEPARATOR . $filename;
 
-        IOFactory::createWriter($phpWord, 'Word2007')->save($path);
+        $processor->saveAs($path);
 
         return $path;
     }
 
-    private function addSubsection($section, string $title, ?string $content): void
+    private function resolveTemplatePath(RpdProgram $rpdProgram): string
     {
-        $section->addTitle($title, 3);
-        $this->addParagraph($section, $content ?: 'Не заполнено.');
+        $templateName = match ($rpdProgram->direction) {
+            'technical' => 'technical.docx',
+            'science' => 'science.docx',
+            'social' => 'social.docx',
+            default => 'technical.docx',
+        };
+
+        $path = storage_path('app/templates/rpd/' . $templateName);
+
+        if (! file_exists($path)) {
+            throw new RuntimeException("Шаблон РПД не найден: {$templateName}");
+        }
+
+        return $path;
     }
 
-    private function addParagraph($section, ?string $text): void
+    private function fillCommonFields(TemplateProcessor $processor, RpdProgram $rpdProgram): void
     {
-        foreach (preg_split('/\r\n|\r|\n/', (string) $text) as $line) {
-            $section->addText(
-                $line !== '' ? $line : ' ',
-                [],
-                [
-                    'alignment' => 'both',
-                    'spaceAfter' => 120,
-                    'lineHeight' => 1.15,
-                ]
-            );
+        $values = [
+            'program_title' => $rpdProgram->title,
+            'direction' => $rpdProgram->direction,
+            'direction_label' => $rpdProgram->direction_label ?? $rpdProgram->direction,
+            'complexity_level' => $rpdProgram->complexity_level,
+            'year' => $rpdProgram->year,
+            'smko_code' => $rpdProgram->smko_code,
+            'total_hours' => $rpdProgram->total_hours,
+            'study_period' => $rpdProgram->study_period,
+            'students_age' => $rpdProgram->students_age,
+            'education_form' => $rpdProgram->education_form,
+            'study_mode' => $rpdProgram->study_mode,
+            'students_category' => $rpdProgram->students_category,
+            'preparation_requirements' => $rpdProgram->preparation_requirements,
+            'program_description' => $rpdProgram->program_description,
+            'legal_basis' => $rpdProgram->legal_basis,
+            'relevance' => $rpdProgram->relevance,
+            'goal' => $rpdProgram->goal,
+            'learning_tasks' => $this->formatList($rpdProgram->learning_tasks),
+            'development_tasks' => $this->formatList($rpdProgram->development_tasks),
+            'planned_results' => $this->formatList($rpdProgram->planned_results),
+            'personal_competencies' => $this->formatList($rpdProgram->personal_competencies),
+            'metasubject_competencies' => $this->formatList($rpdProgram->metasubject_competencies),
+            'subject_competencies' => $this->formatList($rpdProgram->subject_competencies),
+            'control_survey_materials' => $rpdProgram->control_survey_materials,
+            'final_practical_work_materials' => $rpdProgram->final_practical_work_materials,
+            'project_topics' => $rpdProgram->project_topics,
+        ];
+
+        foreach ($values as $key => $value) {
+            $processor->setValue($key, $this->cleanValue($value));
         }
     }
 
-    private function addCurriculumTable($section, $curriculumItems): void
+    private function fillCurriculumTable(TemplateProcessor $processor, RpdProgram $rpdProgram): void
     {
-        $table = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => '000000',
-            'cellMargin' => 80,
-            'alignment' => JcTable::CENTER,
-        ]);
-
-        $table->addRow();
-        foreach (['№ п. п.', 'Наименование разделов и тем', 'Всего', 'Теория', 'Практика', 'Форма контроля'] as $heading) {
-            $table->addCell(1600)->addText($heading, ['bold' => true], ['alignment' => 'center']);
-        }
-
-        foreach ($curriculumItems as $item) {
-            $this->addCurriculumRow($table, $item, true);
-
-            foreach ($item->children as $child) {
-                $this->addCurriculumRow($table, $child, false);
-            }
-        }
-    }
-
-    private function addCurriculumRow($table, $item, bool $isSection): void
-    {
-        $table->addRow();
-
-        $table->addCell(900)->addText($item->number);
-        $table->addCell(5200)->addText($item->title, ['bold' => $isSection]);
-        $table->addCell(900)->addText((string) $item->total_hours, [], ['alignment' => 'center']);
-        $table->addCell(900)->addText((string) $item->theory_hours, [], ['alignment' => 'center']);
-        $table->addCell(900)->addText((string) $item->practice_hours, [], ['alignment' => 'center']);
-
-        $control = $item->controlForm?->title ?? $item->control_form ?? '—';
-        $table->addCell(1800)->addText($control);
-    }
-
-    private function addScheduleTable($section, $curriculumItems, RpdProgram $rpdProgram): void
-    {
-        $weeks = (int) ($rpdProgram->scheduleItems->max('week_number') ?: 0);
-
-        if ($weeks <= 0) {
-            $this->addParagraph($section, 'Календарный учебный график не заполнен.');
+        if (! $this->hasVariable($processor, 'curriculum_number')) {
             return;
         }
 
-        $table = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => '000000',
-            'cellMargin' => 60,
-            'alignment' => JcTable::CENTER,
-        ]);
+        $rows = [];
 
-        $table->addRow();
-        $table->addCell(4200)->addText('Раздел', ['bold' => true], ['alignment' => 'center']);
+        $sections = $rpdProgram->curriculumItems
+            ->whereNull('parent_id')
+            ->sortBy('sort_order');
 
-        for ($week = 1; $week <= $weeks; $week++) {
-            $table->addCell(900)->addText($week . ' нед.', ['bold' => true], ['alignment' => 'center']);
+        foreach ($sections as $section) {
+            $rows[] = $this->makeCurriculumRow($section);
+
+            foreach ($section->children->sortBy('sort_order') as $topic) {
+                $rows[] = $this->makeCurriculumRow($topic);
+            }
         }
 
-        foreach ($curriculumItems as $item) {
+        if (empty($rows)) {
+            $rows[] = [
+                'curriculum_number' => '—',
+                'curriculum_title' => 'Учебный план не заполнен',
+                'curriculum_total_hours' => '—',
+                'curriculum_theory_hours' => '—',
+                'curriculum_practice_hours' => '—',
+                'curriculum_control' => '—',
+            ];
+        }
+
+        $processor->cloneRow('curriculum_number', count($rows));
+
+        foreach ($rows as $index => $row) {
+            $number = $index + 1;
+
+            foreach ($row as $key => $value) {
+                $processor->setValue("{$key}#{$number}", $this->cleanValue($value));
+            }
+        }
+    }
+
+    private function makeCurriculumRow($item): array
+    {
+        return [
+            'curriculum_number' => $item->number,
+            'curriculum_title' => $item->title,
+            'curriculum_total_hours' => $item->total_hours,
+            'curriculum_theory_hours' => $item->theory_hours,
+            'curriculum_practice_hours' => $item->practice_hours,
+            'curriculum_control' => $item->controlForm?->title ?? $item->control_form ?? '—',
+        ];
+    }
+
+    private function fillContentSections(TemplateProcessor $processor, RpdProgram $rpdProgram): void
+    {
+        if (! $this->hasVariable($processor, 'content_number')) {
+            return;
+        }
+
+        $sections = $rpdProgram->contentSections;
+
+        if ($sections->isEmpty()) {
+            $sections = collect([
+                (object) [
+                    'number' => '—',
+                    'title' => 'Содержание учебного плана не заполнено',
+                    'content' => '—',
+                ],
+            ]);
+        }
+
+        $processor->cloneRow('content_number', $sections->count());
+
+        foreach ($sections->values() as $index => $section) {
+            $number = $index + 1;
+
+            $processor->setValue("content_number#{$number}", $this->cleanValue($section->number));
+            $processor->setValue("content_title#{$number}", $this->cleanValue($section->title));
+            $processor->setValue("content_text#{$number}", $this->cleanValue($section->content));
+        }
+    }
+
+    private function fillScheduleTable(TemplateProcessor $processor, RpdProgram $rpdProgram): void
+    {
+        if (! $this->hasVariable($processor, 'schedule_table')) {
+            if ($this->hasVariable($processor, 'schedule_note')) {
+                $processor->setValue(
+                    'schedule_note',
+                    'Календарный учебный график формируется в системе.'
+                );
+            }
+
+            return;
+        }
+
+        $weeks = (int) ($rpdProgram->scheduleItems->max('week_number') ?: 0);
+
+        if ($weeks <= 0) {
+            $textRun = new TextRun();
+            $textRun->addText('Календарный учебный график не заполнен.');
+
+            $processor->setComplexBlock('schedule_table', $textRun);
+
+            return;
+        }
+
+        $sections = $rpdProgram->curriculumItems
+            ->whereNull('parent_id')
+            ->where('type', 'section')
+            ->sortBy('sort_order')
+            ->values();
+
+        $table = new Table([
+            'borderSize' => 6,
+            'borderColor' => '000000',
+            'cellMargin' => 80,
+            'width' => 100 * 50,
+            'unit' => 'pct',
+        ]);
+
+        $headerCellStyle = [
+            'valign' => 'center',
+            'bgColor' => 'D9D9D9',
+        ];
+
+        $cellStyle = [
+            'valign' => 'center',
+        ];
+
+        $center = [
+            'alignment' => Jc::CENTER,
+            'spaceAfter' => 0,
+        ];
+
+        $left = [
+            'alignment' => Jc::START,
+            'spaceAfter' => 0,
+        ];
+
+        $table->addRow();
+
+        $table->addCell(
+            Converter::cmToTwip(6),
+            array_merge($headerCellStyle, [
+                'vMerge' => 'restart',
+            ])
+        )->addText('Наименование разделов', ['bold' => true], $center);
+
+        $table->addCell(
+            Converter::cmToTwip(max(6, $weeks * 2)),
+            array_merge($headerCellStyle, [
+                'gridSpan' => $weeks,
+            ])
+        )->addText('Недели обучения/количество часов', ['bold' => true], $center);
+
+        $table->addRow();
+
+        $table->addCell(
+            Converter::cmToTwip(6),
+            array_merge($headerCellStyle, [
+                'vMerge' => 'continue',
+            ])
+        );
+
+        for ($week = 1; $week <= $weeks; $week++) {
+            $table->addCell(Converter::cmToTwip(2), $headerCellStyle)
+                ->addText($week . ' неделя', ['bold' => true], $center);
+        }
+
+        if ($sections->isEmpty()) {
             $table->addRow();
-            $table->addCell(4200)->addText($item->number . '. ' . $item->title);
+
+            $table->addCell(Converter::cmToTwip(6), $cellStyle)
+                ->addText('Разделы не заполнены', [], $left);
+
+            for ($week = 1; $week <= $weeks; $week++) {
+                $table->addCell(Converter::cmToTwip(2), $cellStyle)
+                    ->addText('', [], $center);
+            }
+        }
+
+        foreach ($sections as $section) {
+            $table->addRow();
+
+            $table->addCell(Converter::cmToTwip(6), $cellStyle)
+                ->addText($section->title, [], $left);
 
             for ($week = 1; $week <= $weeks; $week++) {
                 $scheduleItem = $rpdProgram->scheduleItems
-                    ->where('rpd_curriculum_item_id', $item->id)
+                    ->where('rpd_curriculum_item_id', $section->id)
                     ->firstWhere('week_number', $week);
 
-                $table->addCell(900)->addText($scheduleItem?->content ?? '', [], ['alignment' => 'center']);
+                $cell = $table->addCell(Converter::cmToTwip(2), $cellStyle);
+
+                $this->addMultilineCellText(
+                    $cell,
+                    $scheduleItem?->content ?? '',
+                    [],
+                    $center
+                );
             }
         }
+
+        $processor->setComplexBlock('schedule_table', $table);
+    }
+
+    private function fillResources(TemplateProcessor $processor, RpdProgram $rpdProgram): void
+    {
+        $processor->setValue(
+            'main_recommended_resources',
+            $this->cleanValue($this->formatResources($rpdProgram, 'main_recommended'))
+        );
+
+        $processor->setValue(
+            'additional_resources',
+            $this->cleanValue($this->formatResources($rpdProgram, 'additional'))
+        );
+
+        $processor->setValue(
+            'internet_resources',
+            $this->cleanValue($this->formatResources($rpdProgram, 'internet'))
+        );
+    }
+
+    private function fillAuthors(TemplateProcessor $processor, RpdProgram $rpdProgram): void
+    {
+        $authors = $rpdProgram->authors->values();
+
+        if ($authors->isEmpty()) {
+            $authors = collect([
+                (object) [
+                    'position' => '—',
+                    'name' => '—',
+                    'organization' => null,
+                ],
+            ]);
+        }
+
+        if ($this->hasVariable($processor, 'author_position')) {
+            $processor->cloneRow('author_position', $authors->count());
+
+            foreach ($authors as $index => $author) {
+                $number = $index + 1;
+
+                $processor->setValue(
+                    "author_position#{$number}",
+                    $this->cleanValue($author->position ?: '—')
+                );
+
+                $processor->setValue(
+                    "author_name#{$number}",
+                    $this->cleanValue($this->formatAuthorName($author->name))
+                );
+            }
+
+            return;
+        }
+
+        if ($this->hasVariable($processor, 'authors')) {
+            $processor->setValue('authors', $this->cleanValue($this->formatAuthorsText($authors)));
+        }
+    }
+
+    private function addMultilineCellText(Cell $cell, ?string $text, array $fontStyle = [], array $paragraphStyle = []): void
+    {
+        $lines = preg_split('/\r\n|\r|\n/', (string) $text);
+
+        if (empty($lines)) {
+            $cell->addText('', $fontStyle, $paragraphStyle);
+            return;
+        }
+
+        foreach ($lines as $index => $line) {
+            if ($index > 0) {
+                $cell->addTextBreak();
+            }
+
+            $cell->addText($line !== '' ? $line : ' ', $fontStyle, $paragraphStyle);
+        }
+    }
+
+    private function formatAuthorName(?string $name): string
+    {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            return '—';
+        }
+
+        $parts = preg_split('/\s+/u', $name);
+
+        if (count($parts) < 2) {
+            return $name;
+        }
+
+        $lastName = $parts[0];
+
+        $initials = collect(array_slice($parts, 1))
+            ->filter()
+            ->map(fn($part) => mb_substr($part, 0, 1) . '.')
+            ->implode('');
+
+        return trim($initials . ' ' . $lastName);
+    }
+
+    private function formatAuthorsText($authors): string
+    {
+        return $authors
+            ->map(function ($author) {
+                $parts = array_filter([
+                    $author->position,
+                    $this->formatAuthorName($author->name),
+                    $author->organization,
+                ]);
+
+                return implode(', ', $parts);
+            })
+            ->implode("\n");
+    }
+
+    private function formatResources(RpdProgram $rpdProgram, string $type): string
+    {
+        $resources = $rpdProgram->resources
+            ->where('type', $type)
+            ->values();
+
+        if ($resources->isEmpty()) {
+            return 'Не заполнено.';
+        }
+
+        return $resources
+            ->map(fn($resource, $index) => ($index + 1) . '. ' . $resource->title)
+            ->implode("\n");
+    }
+
+    private function formatList($value): string
+    {
+        if (is_array($value)) {
+            return collect($value)
+                ->filter()
+                ->map(fn($item) => '• ' . $item)
+                ->implode("\n");
+        }
+
+        return (string) $value;
+    }
+
+    private function cleanValue($value): string
+    {
+        $value = (string) ($value ?? '');
+
+        return htmlspecialchars($value !== '' ? $value : '—', ENT_QUOTES | ENT_XML1, 'UTF-8');
+    }
+
+    private function hasVariable(TemplateProcessor $processor, string $variable): bool
+    {
+        return in_array($variable, $processor->getVariables(), true);
     }
 }
