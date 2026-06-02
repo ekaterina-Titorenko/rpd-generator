@@ -113,15 +113,47 @@
         <div>
             <h2 class="card-title">Проверка администратором</h2>
             <p class="card-description">
-                Административное решение доступно после отправки РПД преподавателем на проверку.
+                Администратор может утвердить готовую РПД без отдельной отправки на проверку.
             </p>
         </div>
+
+        @if ($isReadyForReview && in_array($rpdProgram->status, ['draft', 'revision'], true))
+        <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}">
+            @csrf
+            @method('PATCH')
+
+            <button type="submit" class="btn btn-primary">
+                Утвердить РПД
+            </button>
+        </form>
+        @endif
     </div>
 
     <div class="card-body">
-        <div class="alert alert-warning">
-            Текущий статус: {{ $rpdProgram->status_label }}. РПД можно просматривать, но нельзя утвердить, вернуть на доработку или отклонить до отправки на проверку.
+        @if ($isReadyForReview)
+        <div class="alert alert-success">
+            РПД заполнена и может быть утверждена администратором.
         </div>
+        @else
+        <div class="alert alert-warning">
+            РПД пока нельзя утвердить. Заполните обязательные разделы:
+        </div>
+
+        <div class="readiness-grid readiness-grid-compact">
+            @foreach ($readiness as $item)
+            @unless ($item['is_ready'])
+            <a href="{{ $item['url'] }}" class="readiness-item readiness-item-warning">
+                <div class="readiness-status">!</div>
+
+                <div>
+                    <strong>{{ $item['title'] }}</strong>
+                    <p>{{ $item['message'] }}</p>
+                </div>
+            </a>
+            @endunless
+            @endforeach
+        </div>
+        @endif
     </div>
 </section>
 @endif

@@ -135,7 +135,7 @@ class RpdProgramController extends Controller
             ],
         ];
 
-        $isReadyForReview = collect($readiness)->every(fn ($item) => $item['is_ready']);
+        $isReadyForReview = collect($readiness)->every(fn($item) => $item['is_ready']);
 
         return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems', 'readiness', 'isReadyForReview'));
     }
@@ -227,6 +227,12 @@ class RpdProgramController extends Controller
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         abort_unless($request->user()->role === 'admin', 403);
+
+        $errors = $this->validateBeforeSubmit($rpdProgram);
+
+        if (! empty($errors)) {
+            return back()->withErrors($errors);
+        }
 
         $validated = $request->validate([
             'review_comment' => ['required', 'string'],
