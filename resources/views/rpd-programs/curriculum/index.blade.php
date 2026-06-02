@@ -11,7 +11,7 @@
         </div>
 
         <div class="actions">
-            <a href="{{ route('rpd-programs.show', $rpdProgram) }}#section-content" class="btn btn-secondary">К РПД</a>
+            <a href="{{ route('rpd-programs.show', $rpdProgram) }}#section-curriculum" class="btn btn-secondary">К РПД</a>
         </div>
     </div>
 
