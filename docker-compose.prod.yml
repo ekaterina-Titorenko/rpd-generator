@@ -14,18 +14,18 @@ services:
     depends_on:
       - meilisearch
 
-    nginx:
-      build:
-        context: .
-        dockerfile: Dockerfile.nginx
-      container_name: rpd_nginx
-      restart: unless-stopped
-      ports:
-        - "8080:80"
-      volumes:
-        - ./storage:/var/www/html/storage:ro
-      depends_on:
-        - app
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: rpd_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./storage:/var/www/html/storage:ro
+    depends_on:
+      - app
 
   meilisearch:
     image: getmeili/meilisearch:v1.13
