@@ -143,6 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let timer = null;
     let lastSubmittedValue = input.value;
 
+    input.addEventListener('keydown', (event) => {
+
+        if (event.key === 'Enter') {
+
+            event.preventDefault();
+
+        }
+
+    });
+
     input.addEventListener('input', () => {
         window.clearTimeout(timer);
 
@@ -201,21 +211,27 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('[data-live-search-form]');
     const input = document.querySelector('[data-live-search-input]');
-    const results = document.querySelector('[data-live-search-results]');
+    const tbody = document.querySelector('[data-rpd-programs-tbody]');
+    const pagination = document.querySelector('[data-rpd-programs-pagination]');
 
-    if (!form || !input || !results) {
+    if (!form || !input || !tbody || !pagination) {
         return;
     }
 
     let timer = null;
     let controller = null;
+    let latestRequestId = 0;
 
-    const loadResults = () => {
-        const url = new URL(form.action, window.location.origin);
+    const buildUrl = (href = form.action) => {
+        const url = new URL(href, window.location.origin);
         const value = input.value.trim();
+
+        url.searchParams.delete('page');
 
         if (value !== '') {
             url.searchParams.set('search', value);
+        } else {
+            url.searchParams.delete('search');
         }
 
         const sort = form.querySelector('[name="sort"]')?.value;
@@ -229,18 +245,25 @@ document.addEventListener('DOMContentLoaded', () => {
             url.searchParams.set('direction', direction);
         }
 
+        return url;
+    };
+
+    const loadResults = (href = form.action) => {
+        const requestId = ++latestRequestId;
+        const url = buildUrl(href);
+
         if (controller) {
             controller.abort();
         }
 
         controller = new AbortController();
 
-        results.classList.add('is-loading');
+        tbody.classList.add('is-loading');
 
         fetch(url.toString(), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html',
+                'Accept': 'application/json',
             },
             signal: controller.signal,
         })
@@ -249,11 +272,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Search request failed');
                 }
 
-                return response.text();
+                return response.json();
             })
-            .then((html) => {
-                results.innerHTML = html;
+            .then((payload) => {
+                if (requestId !== latestRequestId) {
+                    return;
+                }
+
+                tbody.innerHTML = payload.rows;
+                pagination.innerHTML = payload.pagination;
                 window.history.replaceState({}, '', url.toString());
+
+                input.focus({ preventScroll: true });
+
+                const position = input.value.length;
+
+                if (typeof input.setSelectionRange === 'function') {
+                    input.setSelectionRange(position, position);
+                }
             })
             .catch((error) => {
                 if (error.name !== 'AbortError') {
@@ -261,7 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .finally(() => {
-                results.classList.remove('is-loading');
+                if (requestId === latestRequestId) {
+                    tbody.classList.remove('is-loading');
+                }
             });
     };
 
@@ -270,7 +308,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         timer = window.setTimeout(() => {
             loadResults();
-        }, 250);
+        }, 350);
+    });
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            window.clearTimeout(timer);
+            loadResults();
+        }
     });
 
     form.addEventListener('submit', (event) => {
@@ -279,57 +325,32 @@ document.addEventListener('DOMContentLoaded', () => {
         loadResults();
     });
 
-    form.addEventListener('reset', () => {
-        window.setTimeout(() => {
-            loadResults();
-        }, 0);
-    });
+    document.addEventListener('click', (event) => {
+        const sortLink = event.target.closest('.rpd-programs-table th a');
+        const pageLink = event.target.closest('[data-rpd-programs-pagination] a');
 
-    results.addEventListener('click', (event) => {
-        const link = event.target.closest('a');
+        const link = sortLink || pageLink;
 
-        if (!link || !link.closest('th')) {
+        if (!link) {
             return;
         }
 
         event.preventDefault();
 
-        if (controller) {
-            controller.abort();
+        const url = new URL(link.href);
+
+        const sortInput = form.querySelector('[name="sort"]');
+        const directionInput = form.querySelector('[name="direction"]');
+
+        if (sortInput) {
+            sortInput.value = url.searchParams.get('sort') || 'created_at';
         }
 
-        controller = new AbortController();
-        results.classList.add('is-loading');
+        if (directionInput) {
+            directionInput.value = url.searchParams.get('direction') || 'desc';
+        }
 
-        fetch(link.href, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html',
-            },
-            signal: controller.signal,
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Sort request failed');
-                }
-
-                return response.text();
-            })
-            .then((html) => {
-                results.innerHTML = html;
-                window.history.replaceState({}, '', link.href);
-
-                const url = new URL(link.href);
-                form.querySelector('[name="sort"]').value = url.searchParams.get('sort') || 'created_at';
-                form.querySelector('[name="direction"]').value = url.searchParams.get('direction') || 'desc';
-            })
-            .catch((error) => {
-                if (error.name !== 'AbortError') {
-                    console.error(error);
-                }
-            })
-            .finally(() => {
-                results.classList.remove('is-loading');
-            });
+        window.clearTimeout(timer);
+        loadResults(link.href);
     });
 });

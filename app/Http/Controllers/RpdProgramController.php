@@ -86,10 +86,25 @@ class RpdProgramController extends Controller
             ));
         }
 
+        if ($request->ajax()) {
+            return response()->json([
+                'rows' => view('rpd-programs._rows', compact(
+                    'rpdPrograms',
+                    'sort',
+                    'direction'
+                ))->render(),
+                'pagination' => $rpdPrograms->links()->render(),
+            ]);
+        }
+
         return view('rpd-programs.index', compact(
+
             'rpdPrograms',
+
             'sort',
+
             'direction'
+
         ));
     }
 

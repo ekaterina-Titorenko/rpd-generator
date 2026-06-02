@@ -1383,10 +1383,11 @@ a {
     }
 }
 
-[data-live-search-results] {
+[data-rpd-programs-tbody] {
     transition: opacity 0.15s ease;
 }
 
-[data-live-search-results].is-loading {
+[data-rpd-programs-tbody].is-loading {
     opacity: 0.55;
 }
+
