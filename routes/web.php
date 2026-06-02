@@ -66,6 +66,12 @@ Route::middleware('auth')->group(function () {
 
                 Route::post('users', [AdminUserController::class, 'store'])
                     ->name('users.store');
+
+                Route::patch('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+                    ->name('users.reset-password');
+
+                Route::delete('users/{user}', [AdminUserController::class, 'destroy'])
+                    ->name('users.destroy');
             });
 
         Route::prefix('rpd-programs/{rpdProgram}')

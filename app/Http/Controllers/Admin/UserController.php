@@ -10,10 +10,10 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    private const DEFAULT_TEMPORARY_PASSWORD = '12345678';
+
     public function index(Request $request)
     {
-        $this->authorizeAdmin($request);
-
         $query = User::query();
 
         if ($search = trim((string) $request->get('search'))) {
@@ -33,39 +33,54 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    public function create(Request $request)
+    public function create()
     {
-        $this->authorizeAdmin($request);
-
-        return view('admin.users.create');
+        return view('admin.users.create', [
+            'defaultPassword' => self::DEFAULT_TEMPORARY_PASSWORD,
+        ]);
     }
 
     public function store(Request $request)
     {
-        $this->authorizeAdmin($request);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::in(['teacher', 'admin'])],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         User::create([
             'name' => $validated['name'],
             'email' => mb_strtolower($validated['email']),
             'role' => $validated['role'],
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make(self::DEFAULT_TEMPORARY_PASSWORD),
             'must_change_password' => true,
         ]);
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'Пользователь создан.');
+            ->with('success', 'Пользователь создан. Временный пароль: ' . self::DEFAULT_TEMPORARY_PASSWORD);
     }
 
-    private function authorizeAdmin(Request $request): void
+    public function resetPassword(User $user)
     {
-        abort_unless($request->user()?->role === 'admin', 403);
+        $user->update([
+            'password' => Hash::make(self::DEFAULT_TEMPORARY_PASSWORD),
+            'must_change_password' => true,
+        ]);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Пароль пользователя сброшен. Временный пароль: ' . self::DEFAULT_TEMPORARY_PASSWORD);
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        abort_if($request->user()->id === $user->id, 422, 'Нельзя удалить собственный аккаунт.');
+
+        $user->delete();
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Пользователь удалён.');
     }
 }

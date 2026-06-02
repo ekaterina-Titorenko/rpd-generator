@@ -44,6 +44,7 @@
                         <th>Роль</th>
                         <th>Пароль</th>
                         <th>Создан</th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
 
@@ -65,6 +66,35 @@
                             @endif
                         </td>
                         <td>{{ $user->created_at?->format('d.m.Y H:i') }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <form
+                                    method="POST"
+                                    action="{{ route('admin.users.reset-password', $user) }}"
+                                    onsubmit="return confirm('Сбросить пароль пользователя на 12345678? После входа пользователь должен будет сменить пароль.');">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    <button type="submit" class="btn btn-secondary btn-compact">
+                                        Сбросить пароль
+                                    </button>
+                                </form>
+
+                                @if (auth()->id() !== $user->id)
+                                <form
+                                    method="POST"
+                                    action="{{ route('admin.users.destroy', $user) }}"
+                                    onsubmit="return confirm('Удалить пользователя? Это действие нельзя отменить.');">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="btn btn-danger btn-compact">
+                                        Удалить
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </td>
 
                     </tr>
                     @empty

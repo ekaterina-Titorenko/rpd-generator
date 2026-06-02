@@ -1477,3 +1477,28 @@ a {
     background: var(--warning-bg);
     color: var(--warning-text);
 }
+
+.temporary-password-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid var(--warning-border);
+    border-radius: 12px;
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.temporary-password-box strong {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+}
+
+.temporary-password-box span {
+    color: var(--muted);
+    line-height: 1.4;
+}
