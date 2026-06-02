@@ -344,52 +344,67 @@
 
     <div class="card-body">
         @if ($rpdProgram->scheduleItems->isEmpty())
-            <div class="empty-state">
-                <h2>Календарный график пока не заполнен</h2>
-                <p>Сформируйте график на основе учебного плана и проверьте распределение часов.</p>
-            </div>
+        <div class="empty-state">
+            <h2>Календарный график пока не заполнен</h2>
+            <p>Сформируйте график на основе учебного плана и проверьте распределение часов.</p>
+        </div>
         @else
-            @php
-                $weeks = $rpdProgram->scheduleItems->max('week_number');
-            @endphp
+        @php
+        $weeks = $rpdProgram->scheduleItems->max('week_number');
+        @endphp
+        @php
+        $scheduleRecommendedWeeks = max(1, (int) ceil((int) $rpdProgram->total_hours / max(1, ((int) preg_replace('/\D+/', '', $rpdProgram->lessons_per_week ?: '1')) * (int) $rpdProgram->academic_hours_per_lesson)));
+        $scheduleActualWeeks = $rpdProgram->schedule_weeks_count ?: $scheduleRecommendedWeeks;
+        @endphp
 
-            <div class="table-scroll schedule-scroll">
-                <table class="table schedule-table">
-                    <thead>
-                        <tr>
-                            <th rowspan="2">Наименование разделов</th>
-                            <th colspan="{{ $weeks }}">Недели обучения / количество часов</th>
-                        </tr>
-                        <tr>
-                            @for ($week = 1; $week <= $weeks; $week++)
-                                <th>{{ $week }} неделя</th>
+        @if ($scheduleActualWeeks !== $scheduleRecommendedWeeks)
+        <div class="alert alert-info">
+            Количество недель календарного графика изменено вручную:
+            {{ $scheduleActualWeeks }} вместо рекомендуемых {{ $scheduleRecommendedWeeks }}.
+            Это допустимое отклонение.
+        </div>
+        @endif
+        <div class="table-scroll schedule-scroll">
+            <table class="table schedule-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Наименование разделов</th>
+                        <th colspan="{{ $weeks }}">Недели обучения / количество часов</th>
+                    </tr>
+                    <tr>
+                        @for ($week = 1; $week <= $weeks; $week++)
+                            <th>{{ $week }} неделя</th>
                             @endfor
-                        </tr>
-                    </thead>
+                    </tr>
+                </thead>
 
-                    <tbody>
-                        @foreach ($curriculumItems as $item)
-                            @foreach (collect([$item])->merge($item->children) as $row)
-                                <tr class="schedule-row-{{ $row->type }}">
-                                    <td>
-                                        <strong>{{ $row->number }}. {{ $row->title }}</strong>
-                                    </td>
+                <tbody>
+                    @foreach ($curriculumItems as $row)
+                    <tr class="schedule-row-section">
+                        <td>
+                            <strong>{{ $row->number }}. {{ $row->title }}</strong>
 
-                                    @for ($week = 1; $week <= $weeks; $week++)
-                                        @php
-                                            $scheduleItem = $rpdProgram->scheduleItems
-                                                ->where('rpd_curriculum_item_id', $row->id)
-                                                ->firstWhere('week_number', $week);
-                                        @endphp
+                            <div class="schedule-hours-hint">
+                                Всего: {{ $row->total_hours }} ч. ·
+                                Теория: {{ $row->theory_hours }} ч. ·
+                                Практика: {{ $row->practice_hours }} ч.
+                            </div>
+                        </td>
 
-                                        <td>{!! nl2br(e($scheduleItem?->content)) !!}</td>
-                                    @endfor
-                                </tr>
-                            @endforeach
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        @for ($week = 1; $week <= $weeks; $week++)
+                            @php
+                            $scheduleItem=$rpdProgram->scheduleItems
+                            ->where('rpd_curriculum_item_id', $row->id)
+                            ->firstWhere('week_number', $week);
+                            @endphp
+
+                            <td>{!! nl2br(e($scheduleItem?->content)) !!}</td>
+                            @endfor
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         @endif
     </div>
 </section>

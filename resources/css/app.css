@@ -1068,3 +1068,82 @@ a {
 .schedule-row-topic {
     background: #f2e3b3;
 }
+
+.schedule-weeks-panel {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: center;
+    padding: 20px;
+    margin: 18px 0;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface-muted);
+}
+
+.schedule-weeks-copy {
+    display: grid;
+    gap: 6px;
+}
+
+.schedule-weeks-copy strong {
+    font-size: 18px;
+}
+
+.schedule-weeks-copy p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.schedule-weeks-copy span {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.schedule-weeks-form {
+    display: grid;
+    grid-template-columns: 140px 130px;
+    gap: 12px;
+    align-items: end;
+}
+
+.schedule-weeks-input {
+    margin: 0;
+}
+
+.schedule-weeks-input input {
+    width: 100%;
+    min-height: 46px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.schedule-weeks-form .btn {
+    min-height: 46px;
+    width: 100%;
+}
+
+@media (max-width: 720px) {
+    .schedule-weeks-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .schedule-weeks-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card-body > .alert + .alert,
+.card-body > .alert + .schedule-weeks-panel,
+.card-body > .schedule-weeks-panel + .alert {
+    margin-top: 14px;
+}
+
+.alert-info {
+    border-color: #c8b98d;
+    background: #f7edc5;
+    color: #6f5b2a;
+}
+

@@ -99,6 +99,9 @@ Route::middleware('auth')->group(function () {
 
             Route::get('schedule', [RpdScheduleController::class, 'index'])
                 ->name('schedule.index');
+                
+            Route::patch('schedule/weeks', [RpdScheduleController::class, 'updateWeeks'])
+                ->name('schedule.weeks.update');
 
             Route::post('schedule/generate', [RpdScheduleController::class, 'generate'])
                 ->name('schedule.generate');

@@ -13,15 +13,17 @@ class RpdScheduleController extends Controller
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         $rpdProgram->load([
-            'curriculumItems' => fn ($query) => $query->orderBy('sort_order'),
+            'curriculumItems' => fn($query) => $query->orderBy('sort_order'),
             'scheduleItems',
         ]);
 
         $weeksCount = $this->calculateWeeksCount($rpdProgram);
-
+        $recommendedWeeksCount = $this->recommendedWeeksCount($rpdProgram);
+        
         return view('rpd-programs.schedule.index', compact(
             'rpdProgram',
-            'weeksCount'
+            'weeksCount',
+            'recommendedWeeksCount'
         ));
     }
 
@@ -30,7 +32,7 @@ class RpdScheduleController extends Controller
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         $rpdProgram->load([
-            'curriculumItems' => fn ($query) => $query->orderBy('sort_order'),
+            'curriculumItems' => fn($query) => $query->orderBy('sort_order'),
         ]);
 
         $rpdProgram->scheduleItems()->delete();
@@ -39,10 +41,7 @@ class RpdScheduleController extends Controller
         $currentWeek = 1;
         $remainingWeekHours = $this->hoursPerWeek($rpdProgram);
 
-        foreach ($rpdProgram->curriculumItems as $item) {
-            if ($item->type !== 'section' && $item->type !== 'topic') {
-                continue;
-            }
+        foreach ($rpdProgram->curriculumItems->where('type', 'section') as $item) {
 
             $remainingTheory = (int) $item->theory_hours;
             $remainingPractice = (int) $item->practice_hours;
@@ -136,6 +135,15 @@ class RpdScheduleController extends Controller
 
     private function calculateWeeksCount(RpdProgram $rpdProgram): int
     {
+        if ($rpdProgram->schedule_weeks_count) {
+            return (int) $rpdProgram->schedule_weeks_count;
+        }
+
+        return $this->recommendedWeeksCount($rpdProgram);
+    }
+
+    private function recommendedWeeksCount(RpdProgram $rpdProgram): int
+    {
         $hoursPerWeek = $this->hoursPerWeek($rpdProgram);
 
         if ($hoursPerWeek <= 0) {
@@ -161,5 +169,26 @@ class RpdScheduleController extends Controller
         }
 
         abort_unless($rpdProgram->user_id === $request->user()->id, 403);
+    }
+
+    public function updateWeeks(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        $validated = $request->validate([
+            'schedule_weeks_count' => ['required', 'integer', 'min:1', 'max:52'],
+        ]);
+
+        $rpdProgram->update([
+            'schedule_weeks_count' => $validated['schedule_weeks_count'],
+        ]);
+
+        $rpdProgram->scheduleItems()
+            ->where('week_number', '>', $validated['schedule_weeks_count'])
+            ->delete();
+
+        return redirect()
+            ->route('rpd-programs.schedule.index', $rpdProgram)
+            ->with('success', 'Количество недель обновлено.');
     }
 }

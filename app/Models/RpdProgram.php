@@ -51,6 +51,7 @@ class RpdProgram extends Model
         'control_survey_materials',
         'final_practical_work_materials',
         'project_topics',
+        'schedule_weeks_count',
     ];
 
     protected $casts = [
