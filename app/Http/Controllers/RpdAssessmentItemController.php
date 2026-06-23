@@ -37,6 +37,13 @@ class RpdAssessmentItemController extends Controller
         );
 
         $this->validateNumberedList(
+            $validated['final_practical_work_materials'] ?? null,
+            'final_practical_work_materials',
+            'Материалы для проведения итоговой практической работы',
+            $errors
+        );
+
+        $this->validateNumberedList(
             $validated['project_topics'] ?? null,
             'project_topics',
             'Типовые темы проектных работ',
@@ -53,6 +60,10 @@ class RpdAssessmentItemController extends Controller
             $validated['control_survey_materials'] ?? null
         );
 
+        $validated['final_practical_work_materials'] = $this->normalizeNumberedLines(
+            $validated['final_practical_work_materials'] ?? null
+        );
+
         $validated['project_topics'] = $this->normalizeNumberedLines(
             $validated['project_topics'] ?? null
         );
@@ -67,16 +78,16 @@ class RpdAssessmentItemController extends Controller
     private function validateNumberedList(?string $value, string $field, string $label, MessageBag $errors): void
     {
         $lines = collect(preg_split('/\R/u', (string) $value))
-            ->map(fn ($line) => trim($line));
+            ->map(fn($line) => trim($line));
 
         $filledItems = $lines
-            ->map(fn ($line) => preg_replace('/^\s*\d+[\).\s-]*/u', '', $line))
-            ->map(fn ($line) => trim((string) $line))
+            ->map(fn($line) => preg_replace('/^\s*\d+[\).\s-]*/u', '', $line))
+            ->map(fn($line) => trim((string) $line))
             ->filter()
             ->values();
 
         $emptyNumberedItems = $lines
-            ->filter(fn ($line) => preg_match('/^\s*\d+[\).\s-]*$/u', $line))
+            ->filter(fn($line) => preg_match('/^\s*\d+[\).\s-]*$/u', $line))
             ->values();
 
         if ($emptyNumberedItems->isNotEmpty()) {
@@ -97,9 +108,9 @@ class RpdAssessmentItemController extends Controller
     private function normalizeNumberedLines(?string $value): ?string
     {
         $lines = collect(preg_split('/\R/u', (string) $value))
-            ->map(fn ($line) => trim($line))
-            ->map(fn ($line) => preg_replace('/^\s*\d+[\).\s-]*/u', '', $line))
-            ->map(fn ($line) => trim((string) $line))
+            ->map(fn($line) => trim($line))
+            ->map(fn($line) => preg_replace('/^\s*\d+[\).\s-]*/u', '', $line))
+            ->map(fn($line) => trim((string) $line))
             ->filter()
             ->values();
 
@@ -107,9 +118,7 @@ class RpdAssessmentItemController extends Controller
             return null;
         }
 
-        return $lines
-            ->map(fn ($line, $index) => ($index + 1) . '. ' . $line)
-            ->implode("\n");
+        return $lines->implode("\n");
     }
 
     private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void

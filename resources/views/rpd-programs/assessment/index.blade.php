@@ -53,7 +53,7 @@
                     </div>
 
                     @error('control_survey_materials')
-                        <div class="form-error">{{ $message }}</div>
+                    <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -75,7 +75,19 @@
                         rows="8"
                         form="assessment-form"
                         data-autosubmit
-                        data-autoresize>{{ old('final_practical_work_materials', $rpdProgram->final_practical_work_materials) }}</textarea>
+                        data-autoresize
+                        data-auto-numbered-list
+                        data-min-lines="15"
+                        data-line-counter-target="final-practical-work-counter"
+                        placeholder="Каждая непустая строка — один пункт итоговой практической работы. Минимум 15 строк.">{{ old('final_practical_work_materials', $rpdProgram->final_practical_work_materials) }}</textarea>
+
+                    <div class="line-counter" id="final-practical-work-counter">
+                        0 / 15 пунктов
+                    </div>
+
+                    @error('final_practical_work_materials')
+                    <div class="form-error">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -107,7 +119,7 @@
                     </div>
 
                     @error('project_topics')
-                        <div class="form-error">{{ $message }}</div>
+                    <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -168,7 +180,9 @@
 
                 textarea.value = '1. ';
                 textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
             };
 
             textarea.addEventListener('focus', ensureFirstNumber);
@@ -190,7 +204,9 @@
 
                 const cursor = start + insert.length;
                 textarea.setSelectionRange(cursor, cursor);
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
             });
 
             textarea.addEventListener('paste', () => {
@@ -209,7 +225,9 @@
                         .map((line, index) => `${index + 1}. ${line}`)
                         .join('\n');
 
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
                 }, 0);
             });
         });

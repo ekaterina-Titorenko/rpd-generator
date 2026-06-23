@@ -31,6 +31,7 @@ class RpdDocxGenerator
         $processor = new TemplateProcessor($templatePath);
 
         $this->fillCommonFields($processor, $rpdProgram);
+        $this->fillAssessmentMaterials($processor, $rpdProgram);
         $this->fillCurriculumTable($processor, $rpdProgram);
         $this->fillContentSections($processor, $rpdProgram);
         $this->fillScheduleTable($processor, $rpdProgram);
@@ -110,14 +111,90 @@ class RpdDocxGenerator
             'personal_competencies' => $this->formatList($rpdProgram->personal_competencies),
             'metasubject_competencies' => $this->formatList($rpdProgram->metasubject_competencies),
             'subject_competencies' => $this->formatList($rpdProgram->subject_competencies),
-            'control_survey_materials' => $rpdProgram->control_survey_materials,
-            'final_practical_work_materials' => $rpdProgram->final_practical_work_materials,
-            'project_topics' => $rpdProgram->project_topics,
         ];
 
         foreach ($values as $key => $value) {
             $processor->setValue($key, $this->cleanValue($value));
         }
+    }
+
+    private function fillAssessmentMaterials(TemplateProcessor $processor, RpdProgram $rpdProgram): void
+    {
+        $this->setNumberedListBlock(
+            $processor,
+            'control_survey_materials',
+            $rpdProgram->control_survey_materials
+        );
+
+        $this->setNumberedListBlock(
+            $processor,
+            'final_practical_work_materials',
+            $rpdProgram->final_practical_work_materials
+        );
+
+        $this->setNumberedListBlock(
+            $processor,
+            'project_topics',
+            $rpdProgram->project_topics
+        );
+    }
+
+    private function setNumberedListBlock(TemplateProcessor $processor, string $variable, ?string $value): void
+    {
+        $blockName = $variable . '_block';
+        $textVariable = $variable . '_text';
+
+        if (! $this->hasVariable($processor, $blockName)) {
+            if ($this->hasVariable($processor, $variable)) {
+                $processor->setValue($variable, $this->cleanValue($this->formatPlainNumberedList($value)));
+            }
+
+            return;
+        }
+
+        $lines = $this->makeCleanListLines($value);
+
+        if ($lines->isEmpty()) {
+            $processor->cloneBlock($blockName, 1, true, true);
+            $processor->setValue($textVariable . '#1', 'Не заполнено');
+
+            return;
+        }
+
+        $processor->cloneBlock($blockName, $lines->count(), true, true);
+
+        foreach ($lines as $index => $line) {
+            $number = $index + 1;
+
+            $processor->setValue(
+                $textVariable . '#' . $number,
+                $this->cleanValue($line)
+            );
+        }
+    }
+
+
+    private function makeCleanListLines(?string $value)
+    {
+        return collect(preg_split('/\R/u', (string) $value))
+            ->map(fn($line) => trim($line))
+            ->map(fn($line) => preg_replace('/^\s*\d+[\).\s-]*/u', '', $line))
+            ->map(fn($line) => trim((string) $line))
+            ->filter()
+            ->values();
+    }
+
+    private function formatPlainNumberedList(?string $value): string
+    {
+        $lines = $this->makeCleanListLines($value);
+
+        if ($lines->isEmpty()) {
+            return 'Не заполнено';
+        }
+
+        return $lines
+            ->map(fn($line, $index) => ($index + 1) . '. ' . $line)
+            ->implode("\n");
     }
 
     private function fillCurriculumTable(TemplateProcessor $processor, RpdProgram $rpdProgram): void
@@ -337,19 +414,22 @@ class RpdDocxGenerator
 
     private function fillResources(TemplateProcessor $processor, RpdProgram $rpdProgram): void
     {
-        $processor->setValue(
+        $this->setNumberedListBlock(
+            $processor,
             'main_recommended_resources',
-            $this->cleanValue($this->formatResources($rpdProgram, 'main_recommended'))
+            $this->formatResources($rpdProgram, 'main_recommended')
         );
 
-        $processor->setValue(
+        $this->setNumberedListBlock(
+            $processor,
             'additional_resources',
-            $this->cleanValue($this->formatResources($rpdProgram, 'additional'))
+            $this->formatResources($rpdProgram, 'additional')
         );
 
-        $processor->setValue(
+        $this->setNumberedListBlock(
+            $processor,
             'internet_resources',
-            $this->cleanValue($this->formatResources($rpdProgram, 'internet'))
+            $this->formatResources($rpdProgram, 'internet')
         );
     }
 
@@ -460,7 +540,7 @@ class RpdDocxGenerator
         }
 
         return $resources
-            ->map(fn($resource, $index) => ($index + 1) . '. ' . $resource->title)
+            ->map(fn($resource) => $resource->title)
             ->implode("\n");
     }
 
