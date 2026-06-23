@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RpdProgram;
 use Illuminate\Http\Request;
 use App\Services\RpdDocxGenerator;
+use App\Services\RpdScheduleBuilder;
 
 class RpdProgramController extends Controller
 {
@@ -140,11 +141,12 @@ class RpdProgramController extends Controller
             'study_period' => ['required', 'string', 'max:255'],
             'students_age' => ['required', 'string', 'max:255'],
             'education_format' => ['required', 'in:offline,online,mixed'],
-            'lessons_per_week' => ['required', 'string', 'max:255'],
+            'min_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14'],
+            'max_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14', 'gte:min_lessons_per_week'],
             'academic_hours_per_lesson' => ['required', 'integer', 'min:1', 'max:12'],
             'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
         ]);
-
+        $validated = $this->normalizeLessonFrequency($validated);
         $standardTexts = $this->makeStandardTexts($validated);
 
         $directionTexts = $this->makeDirectionTexts($validated);
@@ -172,12 +174,26 @@ class RpdProgramController extends Controller
         $rpdProgram->load([
             'curriculumItems.children',
             'curriculumItems.controlForm',
+            'scheduleItems',
             'authors',
             'resources',
             'contentSections' => fn($query) => $query
                 ->whereNotNull('rpd_curriculum_item_id')
                 ->orderBy('sort_order'),
         ]);
+
+        if (app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram)) {
+            $rpdProgram->load([
+                'curriculumItems.children',
+                'curriculumItems.controlForm',
+                'scheduleItems',
+                'authors',
+                'resources',
+                'contentSections' => fn($query) => $query
+                    ->whereNotNull('rpd_curriculum_item_id')
+                    ->orderBy('sort_order'),
+            ]);
+        }
 
         $curriculumItems = $rpdProgram->curriculumItems()
             ->with(['children', 'controlForm'])
@@ -247,7 +263,20 @@ class RpdProgramController extends Controller
 
         $isReadyForReview = collect($readiness)->every(fn($item) => $item['is_ready']);
 
-        return view('rpd-programs.show', compact('rpdProgram', 'curriculumItems', 'readiness', 'isReadyForReview'));
+        $scheduleBuilder = app(RpdScheduleBuilder::class);
+        $scheduleWeeksCount = $scheduleBuilder->calculateWeeksCount($rpdProgram);
+        $scheduleRecommendedWeeks = $scheduleBuilder->recommendedWeeksCount($rpdProgram);
+        $scheduleWeekTotals = $scheduleBuilder->makeWeekTotals($rpdProgram, $scheduleWeeksCount);
+
+        return view('rpd-programs.show', compact(
+            'rpdProgram',
+            'curriculumItems',
+            'readiness',
+            'isReadyForReview',
+            'scheduleWeeksCount',
+            'scheduleRecommendedWeeks',
+            'scheduleWeekTotals'
+        ));
     }
 
     public function edit(Request $request, RpdProgram $rpdProgram)
@@ -271,11 +300,13 @@ class RpdProgramController extends Controller
             'study_period' => ['required', 'string', 'max:255'],
             'students_age' => ['required', 'string', 'max:255'],
             'education_format' => ['required', 'in:offline,online,mixed'],
-            'lessons_per_week' => ['required', 'string', 'max:255'],
+            'min_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14'],
+            'max_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14', 'gte:min_lessons_per_week'],
             'academic_hours_per_lesson' => ['required', 'integer', 'min:1', 'max:12'],
             'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
 
         ]);
+        $validated = $this->normalizeLessonFrequency($validated);
         $standardTexts = $this->makeStandardTexts($validated);
 
         $rpdProgram->update(array_merge($validated, $standardTexts));
@@ -283,6 +314,43 @@ class RpdProgramController extends Controller
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
             ->with('success', 'Общие сведения РПД обновлены.');
+    }
+
+    private function normalizeLessonFrequency(array $data): array
+    {
+        $minLessons = (int) $data['min_lessons_per_week'];
+        $maxLessons = (int) $data['max_lessons_per_week'];
+
+        unset($data['min_lessons_per_week'], $data['max_lessons_per_week']);
+
+        $data['lessons_per_week'] = $this->formatLessonsPerWeek($minLessons, $maxLessons);
+
+        return $data;
+    }
+
+    private function formatLessonsPerWeek(int $minLessons, int $maxLessons): string
+    {
+        if ($minLessons === $maxLessons) {
+            return $maxLessons . ' ' . $this->lessonWord($maxLessons);
+        }
+
+        return "{$minLessons}-{$maxLessons} раза";
+    }
+
+    private function lessonWord(int $value): string
+    {
+        $lastDigit = $value % 10;
+        $lastTwoDigits = $value % 100;
+
+        if ($lastDigit === 1 && $lastTwoDigits !== 11) {
+            return 'раз';
+        }
+
+        if (in_array($lastDigit, [2, 3, 4], true) && ! in_array($lastTwoDigits, [12, 13, 14], true)) {
+            return 'раза';
+        }
+
+        return 'раз';
     }
 
     public function destroy(RpdProgram $rpdProgram)

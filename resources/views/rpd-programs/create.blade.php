@@ -113,17 +113,33 @@
         </div>
 
         <div class="form-field">
-            <label for="lessons_per_week">Периодичность занятий *</label>
+            <label for="min_lessons_per_week">Минимум занятий в неделю *</label>
             <input
-                id="lessons_per_week"
-                name="lessons_per_week"
-                type="text"
-                value="{{ old('lessons_per_week', '1-2 раза') }}"
+                id="min_lessons_per_week"
+                name="min_lessons_per_week"
+                type="number"
+                value="{{ old('min_lessons_per_week', 1) }}"
+                min="1"
+                max="14"
                 required>
+            <small class="form-hint">Если занятия проходят 1–2 раза в неделю, укажите здесь 1.</small>
         </div>
 
         <div class="form-field">
-            <label for="academic_hours_per_lesson">Академических часов за занятие *</label>
+            <label for="max_lessons_per_week">Максимум занятий в неделю *</label>
+            <input
+                id="max_lessons_per_week"
+                name="max_lessons_per_week"
+                type="number"
+                value="{{ old('max_lessons_per_week', 2) }}"
+                min="1"
+                max="14"
+                required>
+            <small class="form-hint">Для расчёта календарного графика используется максимальное значение.</small>
+        </div>
+
+        <div class="form-field">
+            <label for="academic_hours_per_lesson">Академических часов за одно занятие *</label>
             <input
                 id="academic_hours_per_lesson"
                 name="academic_hours_per_lesson"

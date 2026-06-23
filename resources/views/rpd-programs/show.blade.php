@@ -359,11 +359,8 @@
         </div>
         @else
         @php
-        $weeks = $rpdProgram->scheduleItems->max('week_number');
-        @endphp
-        @php
-        $scheduleRecommendedWeeks = max(1, (int) ceil((int) $rpdProgram->total_hours / max(1, ((int) preg_replace('/\D+/', '', $rpdProgram->lessons_per_week ?: '1')) * (int) $rpdProgram->academic_hours_per_lesson)));
-        $scheduleActualWeeks = $rpdProgram->schedule_weeks_count ?: $scheduleRecommendedWeeks;
+        $weeks = $scheduleWeeksCount;
+        $scheduleActualWeeks = $scheduleWeeksCount;
         @endphp
 
         @if ($scheduleActualWeeks !== $scheduleRecommendedWeeks)
@@ -382,7 +379,12 @@
                     </tr>
                     <tr>
                         @for ($week = 1; $week <= $weeks; $week++)
-                            <th>{{ $week }} неделя</th>
+                            <th>
+                            <div class="schedule-week-heading">
+                                <span>{{ $week }} неделя</span>
+                                <small>Всего: {{ $scheduleWeekTotals[$week] ?? 0 }} ч.</small>
+                            </div>
+                            </th>
                             @endfor
                     </tr>
                 </thead>

@@ -1039,11 +1039,14 @@ a {
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .schedule-table {
+    table-layout: fixed;
     width: max-content;
-    min-width: 980px;
+    min-width: 100%;
+    border: 1px solid var(--border);
 }
 
 .schedule-table th,
@@ -1052,18 +1055,72 @@ a {
     vertical-align: middle;
 }
 
-.schedule-table th:first-child,
-.schedule-table td:first-child {
-    min-width: 360px;
+.schedule-table thead tr:first-child th:first-child,
+.schedule-table tbody td:first-child {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
     text-align: left;
+}
+
+.schedule-table thead tr:nth-child(2) th,
+.schedule-table tbody td:not(:first-child) {
+    width: 124px;
+    min-width: 124px;
+    max-width: 124px;
+    text-align: center;
+}
+
+.schedule-table thead tr:first-child th[colspan] {
+    text-align: center;
 }
 
 .schedule-table textarea {
     width: 100%;
-    min-width: 90px;
-    min-height: 56px;
+    min-width: 100%;
+    min-height: 64px;
+    padding: 9px 8px;
+    box-sizing: border-box;
     resize: vertical;
+    border-color: #d4c9ba;
+    background: #fffdf7;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.35;
     text-align: center;
+}
+
+.schedule-table textarea::placeholder {
+    color: #b8afa5;
+    opacity: 0.55;
+}
+
+.schedule-table textarea:focus::placeholder {
+    opacity: 0.28;
+}
+
+.schedule-week-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.schedule-week-heading span {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.schedule-week-heading small {
+    color: #9a9188;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 .schedule-row-section {
@@ -1132,8 +1189,8 @@ a {
 
 .schedule-hours-hint {
     margin-top: 6px;
-    color: var(--muted);
-    font-size: 13px;
+    color: #9a9188;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.35;
 }

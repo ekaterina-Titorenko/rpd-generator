@@ -8,6 +8,7 @@ use App\Models\RpdProgram;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\RpdContentSection;
+use App\Services\RpdScheduleBuilder;
 
 class RpdCurriculumItemController extends Controller
 {
@@ -102,6 +103,7 @@ class RpdCurriculumItemController extends Controller
 
         $this->renumberProgram($rpdProgram);
         $this->syncContentSections($rpdProgram);
+        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
@@ -142,6 +144,7 @@ class RpdCurriculumItemController extends Controller
 
         $curriculumItem->update($validated);
         $this->syncContentSections($rpdProgram);
+        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
@@ -163,6 +166,7 @@ class RpdCurriculumItemController extends Controller
 
         $this->renumberProgram($rpdProgram);
         $this->syncContentSections($rpdProgram);
+        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)

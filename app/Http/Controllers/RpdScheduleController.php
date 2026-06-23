@@ -4,127 +4,55 @@ namespace App\Http\Controllers;
 
 use App\Models\RpdCurriculumItem;
 use App\Models\RpdProgram;
+use App\Services\RpdScheduleBuilder;
 use Illuminate\Http\Request;
 
 class RpdScheduleController extends Controller
 {
-    public function index(Request $request, RpdProgram $rpdProgram)
+    public function index(Request $request, RpdProgram $rpdProgram, RpdScheduleBuilder $scheduleBuilder)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         $rpdProgram->load([
-            'curriculumItems' => fn($query) => $query->orderBy('sort_order'),
+            'curriculumItems' => fn ($query) => $query->orderBy('sort_order'),
             'scheduleItems',
         ]);
 
-        $weeksCount = $this->calculateWeeksCount($rpdProgram);
-        $recommendedWeeksCount = $this->recommendedWeeksCount($rpdProgram);
-        $scheduleWarnings = $this->makeScheduleWarnings($rpdProgram);
+        if ($scheduleBuilder->ensureGeneratedIfEmpty($rpdProgram)) {
+            $rpdProgram->load([
+                'curriculumItems' => fn ($query) => $query->orderBy('sort_order'),
+                'scheduleItems',
+            ]);
+
+            session()->flash(
+                'success',
+                'Календарный учебный график сформирован автоматически. Проверьте распределение и при необходимости скорректируйте вручную.'
+            );
+        }
+
+        $weeksCount = $scheduleBuilder->calculateWeeksCount($rpdProgram);
+        $recommendedWeeksCount = $scheduleBuilder->recommendedWeeksCount($rpdProgram);
+        $scheduleWarnings = $this->makeScheduleWarnings($rpdProgram, $scheduleBuilder);
+        $weekTotals = $scheduleBuilder->makeWeekTotals($rpdProgram, $weeksCount);
 
         return view('rpd-programs.schedule.index', compact(
             'rpdProgram',
             'weeksCount',
             'recommendedWeeksCount',
-            'scheduleWarnings'
+            'scheduleWarnings',
+            'weekTotals'
         ));
     }
-    private function makeScheduleWarnings(RpdProgram $rpdProgram): array
-    {
-        $warnings = [];
 
-        foreach ($rpdProgram->curriculumItems->where('type', 'section') as $section) {
-            $items = $rpdProgram->scheduleItems
-                ->where('rpd_curriculum_item_id', $section->id);
-
-            $plannedTheory = 0;
-            $plannedPractice = 0;
-
-            foreach ($items as $item) {
-                $plannedTheory += $this->extractHoursByType((string) $item->content, 'Т');
-                $plannedPractice += $this->extractHoursByType((string) $item->content, 'П');
-            }
-
-            if (
-                $plannedTheory !== (int) $section->theory_hours
-                || $plannedPractice !== (int) $section->practice_hours
-            ) {
-                $warnings[$section->id] = [
-                    'planned_theory' => $plannedTheory,
-                    'planned_practice' => $plannedPractice,
-                    'expected_theory' => (int) $section->theory_hours,
-                    'expected_practice' => (int) $section->practice_hours,
-                ];
-            }
-        }
-
-        return $warnings;
-    }
-
-    private function extractHoursByType(string $content, string $type): int
-    {
-        preg_match_all('/' . preg_quote($type, '/') . '\s*\((\d+)\)/u', $content, $matches);
-
-        return collect($matches[1] ?? [])
-            ->map(fn($value) => (int) $value)
-            ->sum();
-    }
-
-    public function generate(Request $request, RpdProgram $rpdProgram)
+    public function generate(Request $request, RpdProgram $rpdProgram, RpdScheduleBuilder $scheduleBuilder)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
-        $rpdProgram->load([
-            'curriculumItems' => fn($query) => $query->orderBy('sort_order'),
-        ]);
-
-        $rpdProgram->scheduleItems()->delete();
-
-        $weeksCount = $this->calculateWeeksCount($rpdProgram);
-        $currentWeek = 1;
-        $remainingWeekHours = $this->hoursPerWeek($rpdProgram);
-
-        foreach ($rpdProgram->curriculumItems->where('type', 'section') as $item) {
-
-            $remainingTheory = (int) $item->theory_hours;
-            $remainingPractice = (int) $item->practice_hours;
-
-            while (($remainingTheory > 0 || $remainingPractice > 0) && $currentWeek <= $weeksCount) {
-                $cellParts = [];
-
-                if ($remainingTheory > 0 && $remainingWeekHours > 0) {
-                    $hours = min($remainingTheory, $remainingWeekHours);
-
-                    $cellParts[] = "Т ({$hours})";
-                    $remainingTheory -= $hours;
-                    $remainingWeekHours -= $hours;
-                }
-
-                if ($remainingPractice > 0 && $remainingWeekHours > 0) {
-                    $hours = min($remainingPractice, $remainingWeekHours);
-
-                    $cellParts[] = "П ({$hours})";
-                    $remainingPractice -= $hours;
-                    $remainingWeekHours -= $hours;
-                }
-
-                if (! empty($cellParts)) {
-                    $rpdProgram->scheduleItems()->create([
-                        'rpd_curriculum_item_id' => $item->id,
-                        'week_number' => $currentWeek,
-                        'content' => implode("\n", $cellParts),
-                    ]);
-                }
-
-                if ($remainingWeekHours <= 0) {
-                    $currentWeek++;
-                    $remainingWeekHours = $this->hoursPerWeek($rpdProgram);
-                }
-            }
-        }
+        $scheduleBuilder->regenerate($rpdProgram);
 
         return redirect()
             ->route('rpd-programs.schedule.index', $rpdProgram)
-            ->with('success', 'Календарный учебный график сформирован.');
+            ->with('success', 'Календарный учебный график сброшен к автоматическому распределению.');
     }
 
     public function update(Request $request, RpdProgram $rpdProgram)
@@ -175,44 +103,6 @@ class RpdScheduleController extends Controller
             ->with('success', 'Календарный учебный график обновлён.');
     }
 
-    private function calculateWeeksCount(RpdProgram $rpdProgram): int
-    {
-        if ($rpdProgram->schedule_weeks_count) {
-            return (int) $rpdProgram->schedule_weeks_count;
-        }
-
-        return $this->recommendedWeeksCount($rpdProgram);
-    }
-
-    private function recommendedWeeksCount(RpdProgram $rpdProgram): int
-    {
-        $hoursPerWeek = $this->hoursPerWeek($rpdProgram);
-
-        if ($hoursPerWeek <= 0) {
-            return 1;
-        }
-
-        return max(1, (int) ceil((int) $rpdProgram->total_hours / $hoursPerWeek));
-    }
-
-    private function hoursPerWeek(RpdProgram $rpdProgram): int
-    {
-        preg_match('/\d+/', (string) $rpdProgram->lessons_per_week, $matches);
-
-        $lessonsPerWeek = isset($matches[0]) ? (int) $matches[0] : 1;
-
-        return max(1, $lessonsPerWeek * (int) $rpdProgram->academic_hours_per_lesson);
-    }
-
-    private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void
-    {
-        if ($request->user()->role === 'admin') {
-            return;
-        }
-
-        abort_unless($rpdProgram->user_id === $request->user()->id, 403);
-    }
-
     public function updateWeeks(Request $request, RpdProgram $rpdProgram)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
@@ -232,5 +122,46 @@ class RpdScheduleController extends Controller
         return redirect()
             ->route('rpd-programs.schedule.index', $rpdProgram)
             ->with('success', 'Количество недель обновлено.');
+    }
+
+    private function makeScheduleWarnings(RpdProgram $rpdProgram, RpdScheduleBuilder $scheduleBuilder): array
+    {
+        $warnings = [];
+
+        foreach ($rpdProgram->curriculumItems->where('type', 'section') as $section) {
+            $items = $rpdProgram->scheduleItems
+                ->where('rpd_curriculum_item_id', $section->id);
+
+            $plannedTheory = 0;
+            $plannedPractice = 0;
+
+            foreach ($items as $item) {
+                $plannedTheory += $scheduleBuilder->extractHoursByType((string) $item->content, 'Т');
+                $plannedPractice += $scheduleBuilder->extractHoursByType((string) $item->content, 'П');
+            }
+
+            if (
+                $plannedTheory !== (int) $section->theory_hours
+                || $plannedPractice !== (int) $section->practice_hours
+            ) {
+                $warnings[$section->id] = [
+                    'planned_theory' => $plannedTheory,
+                    'planned_practice' => $plannedPractice,
+                    'expected_theory' => (int) $section->theory_hours,
+                    'expected_practice' => (int) $section->practice_hours,
+                ];
+            }
+        }
+
+        return $warnings;
+    }
+
+    private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void
+    {
+        if ($request->user()->role === 'admin') {
+            return;
+        }
+
+        abort_unless($rpdProgram->user_id === $request->user()->id, 403);
     }
 }
