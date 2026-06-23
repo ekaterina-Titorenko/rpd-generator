@@ -23,8 +23,10 @@ class RpdResourceController extends Controller
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         $validated = $this->validateResource($request);
+        $validated = $this->normalizeResourceType($validated);
 
         $metadata = $this->makeMetadata($validated);
+
         $validated['metadata'] = $metadata;
         $validated['title'] = $this->makeGostTitle($validated['source_type'], $metadata);
         $validated['url'] = $metadata['url'] ?? null;
@@ -44,6 +46,7 @@ class RpdResourceController extends Controller
         abort_unless($resource->rpd_program_id === $rpdProgram->id, 404);
 
         $validated = $this->validateResource($request);
+        $validated = $this->normalizeResourceType($validated);
 
         $metadata = $this->makeMetadata($validated);
         $validated['metadata'] = $metadata;
@@ -55,6 +58,15 @@ class RpdResourceController extends Controller
         return redirect()
             ->route('rpd-programs.resources.index', $rpdProgram)
             ->with('success', 'Источник обновлён.');
+    }
+
+    private function normalizeResourceType(array $data): array
+    {
+        if (($data['type'] ?? null) === 'internet') {
+            $data['source_type'] = 'electronic';
+        }
+
+        return $data;
     }
 
     public function destroy(Request $request, RpdProgram $rpdProgram, RpdResource $resource)

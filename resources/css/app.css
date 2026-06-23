@@ -1559,3 +1559,72 @@ a {
     color: var(--muted);
     line-height: 1.4;
 }
+
+
+.schedule-help {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #d8ccb8;
+    border-radius: 10px;
+    background: rgba(242, 227, 179, 0.45);
+    color: #7d7166;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.schedule-help strong {
+    color: #6f6258;
+    font-weight: 600;
+}
+
+.schedule-help span {
+    color: #5f554d;
+    font-weight: 600;
+}
+
+.card-header .actions form {
+    margin: 0;
+}
+
+.card-header .actions .btn-compact {
+    min-height: 36px;
+    padding: 7px 13px;
+    white-space: nowrap;
+}
+
+.btn-danger {
+    border-color: #a9341f;
+    background: #b7351f;
+    color: #fffaf4;
+}
+
+.btn-danger:hover {
+    border-color: #8f2817;
+    background: #9f2e1b;
+    color: #fffaf4;
+}
+
+.is-readonly-soft {
+    background: #f6f0e6;
+    color: #6f6258;
+    border-color: #d8ccb8;
+    cursor: not-allowed;
+}
+
+.form-hint-inline {
+    display: block;
+    min-height: 0;
+    margin-top: 4px;
+    color: #9a9188;
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+.resource-builder-form .form-field {
+    align-self: start;
+}
+
+.resource-builder-form .form-field:has([data-internet-source-hint]) {
+    margin-bottom: -4px;
+}

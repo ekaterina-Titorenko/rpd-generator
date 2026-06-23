@@ -20,7 +20,7 @@
 
         <div class="form-field">
             <label for="type">Раздел *</label>
-            <select id="type" name="type" required>
+            <select id="type" name="type" required data-resource-section-select>
                 <option value="main_recommended">Список основной рекомендуемой литературы</option>
                 <option value="additional">Дополнительная литература</option>
                 <option value="internet">Ресурсы информационно-телекоммуникационной сети Интернет</option>
@@ -35,6 +35,9 @@
                 <option value="electronic">Электронный ресурс</option>
                 <option value="legal">Нормативный документ</option>
             </select>
+            <small class="form-hint form-hint-inline" data-internet-source-hint hidden>
+                Автоматически: «Электронный ресурс».
+            </small>
         </div>
 
         <div class="form-field form-field-wide" data-source-field="book article">
@@ -208,4 +211,48 @@
         @endif
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sectionSelect = document.querySelector('[data-resource-section-select]');
+        const sourceTypeSelect = document.querySelector('[data-source-type-select]');
+        const internetHint = document.querySelector('[data-internet-source-hint]');
+
+        if (!sectionSelect || !sourceTypeSelect) {
+            return;
+        }
+
+        const syncSourceType = () => {
+            const isInternet = sectionSelect.value === 'internet';
+
+            if (isInternet) {
+                sourceTypeSelect.value = 'electronic';
+                sourceTypeSelect.setAttribute('readonly', 'readonly');
+                sourceTypeSelect.classList.add('is-readonly-soft');
+
+                if (internetHint) {
+                    internetHint.hidden = false;
+                }
+
+                return;
+            }
+
+            sourceTypeSelect.removeAttribute('readonly');
+            sourceTypeSelect.classList.remove('is-readonly-soft');
+
+            if (internetHint) {
+                internetHint.hidden = true;
+            }
+        };
+
+        sectionSelect.addEventListener('change', syncSourceType);
+        sourceTypeSelect.addEventListener('change', () => {
+            if (sectionSelect.value === 'internet') {
+                sourceTypeSelect.value = 'electronic';
+            }
+        });
+
+        syncSourceType();
+    });
+</script>
 @endsection
