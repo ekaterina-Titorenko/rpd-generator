@@ -217,6 +217,11 @@ class RpdDocxGenerator
             }
         }
 
+        $processor->setValue('curriculum_total_sum', $this->cleanValue($sections->sum('total_hours')));
+        $processor->setValue('curriculum_theory_sum', $this->cleanValue($sections->sum('theory_hours')));
+        $processor->setValue('curriculum_practice_sum', $this->cleanValue($sections->sum('practice_hours')));
+
+
         if (empty($rows)) {
             $rows[] = [
                 'curriculum_number' => '—',
@@ -474,19 +479,22 @@ class RpdDocxGenerator
 
     private function addMultilineCellText(Cell $cell, ?string $text, array $fontStyle = [], array $paragraphStyle = []): void
     {
-        $lines = preg_split('/\r\n|\r|\n/', (string) $text);
+        $lines = collect(preg_split('/\r\n|\r|\n/', (string) $text))
+            ->map(fn($line) => trim($line))
+            ->filter()
+            ->values();
 
-        if (empty($lines)) {
+        if ($lines->isEmpty()) {
             $cell->addText('', $fontStyle, $paragraphStyle);
             return;
         }
 
-        foreach ($lines as $index => $line) {
-            if ($index > 0) {
-                $cell->addTextBreak();
-            }
-
-            $cell->addText($line !== '' ? $line : ' ', $fontStyle, $paragraphStyle);
+        foreach ($lines as $line) {
+            $cell->addText($line, $fontStyle, array_merge([
+                'spaceBefore' => 0,
+                'spaceAfter' => 0,
+                'lineHeight' => 1.0,
+            ], $paragraphStyle));
         }
     }
 
