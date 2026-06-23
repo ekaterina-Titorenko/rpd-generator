@@ -341,12 +341,12 @@ class RpdDocxGenerator
 
         $font = [
             'name' => 'Times New Roman',
-            'size' => 10,
+            'size' => 12,
         ];
 
         $fontBold = [
             'name' => 'Times New Roman',
-            'size' => 10,
+            'size' => 12,
             'bold' => true,
         ];
 
