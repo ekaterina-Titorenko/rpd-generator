@@ -350,17 +350,21 @@ class RpdDocxGenerator
             'bold' => true,
         ];
 
+        $sectionColumnWidth = Converter::cmToTwip(7);
+        $weeksTotalWidth = Converter::cmToTwip(15);
+        $weekColumnWidth = (int) floor($weeksTotalWidth / max(1, $weeks));
+
         $table->addRow();
 
         $table->addCell(
-            Converter::cmToTwip(6),
+            $sectionColumnWidth,
             array_merge($headerCellStyle, [
                 'vMerge' => 'restart',
             ])
         )->addText('Наименование разделов', $fontBold, $center);
 
         $table->addCell(
-            Converter::cmToTwip(max(6, $weeks * 1.6)),
+            $weekColumnWidth * $weeks,
             array_merge($headerCellStyle, [
                 'gridSpan' => $weeks,
             ])
@@ -369,25 +373,25 @@ class RpdDocxGenerator
         $table->addRow();
 
         $table->addCell(
-            Converter::cmToTwip(6),
+            $sectionColumnWidth,
             array_merge($headerCellStyle, [
                 'vMerge' => 'continue',
             ])
         );
 
         for ($week = 1; $week <= $weeks; $week++) {
-            $table->addCell(Converter::cmToTwip(1.6), $headerCellStyle)
+            $table->addCell($weekColumnWidth, $headerCellStyle)
                 ->addText($week . ' неделя', $fontBold, $center);
         }
 
         if ($sections->isEmpty()) {
             $table->addRow();
 
-            $table->addCell(Converter::cmToTwip(6), $cellStyle)
+            $table->addCell($sectionColumnWidth, $cellStyle)
                 ->addText('Разделы не заполнены', $font, $left);
 
             for ($week = 1; $week <= $weeks; $week++) {
-                $table->addCell(Converter::cmToTwip(1.6), $cellStyle)
+                $table->addCell($weekColumnWidth, $cellStyle)
                     ->addText('', $font, $center);
             }
         }
@@ -395,7 +399,7 @@ class RpdDocxGenerator
         foreach ($sections as $section) {
             $table->addRow();
 
-            $table->addCell(Converter::cmToTwip(6), $cellStyle)
+            $table->addCell($sectionColumnWidth, $cellStyle)
                 ->addText($section->title, $font, $left);
 
             for ($week = 1; $week <= $weeks; $week++) {
@@ -403,7 +407,7 @@ class RpdDocxGenerator
                     ->where('rpd_curriculum_item_id', $section->id)
                     ->firstWhere('week_number', $week);
 
-                $cell = $table->addCell(Converter::cmToTwip(1.6), $cellStyle);
+                $cell = $table->addCell($weekColumnWidth, $cellStyle);
 
                 $this->addMultilineCellText(
                     $cell,
