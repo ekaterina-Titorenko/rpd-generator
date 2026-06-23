@@ -56,9 +56,19 @@
                         name="content"
                         rows="6"
                         form="content-section-form-{{ $contentSection->id }}"
-                        placeholder="Кратко опишите темы, понятия, практические работы и результаты по разделу."
+                        placeholder="Опишите содержание раздела: темы, понятия, практические работы и результаты. Минимум 100 символов."
                         data-autosubmit
-                        data-autoresize>{{ old('content', $contentSection->content) }}</textarea>
+                        data-autoresize
+                        data-min-chars="100"
+                        data-char-counter-target="content-counter-{{ $contentSection->id }}">{{ old('content', $contentSection->content) }}</textarea>
+
+                    <div class="char-counter" id="content-counter-{{ $contentSection->id }}">
+                        0 / 100 символов
+                    </div>
+
+                    @error('content')
+                    <div class="form-error">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
             @endforeach
@@ -66,4 +76,33 @@
         @endif
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const normalizeText = (value) => {
+            return value.replace(/\s+/g, ' ').trim();
+        };
+
+        document.querySelectorAll('[data-min-chars]').forEach((textarea) => {
+            const min = Number(textarea.dataset.minChars || 100);
+            const counter = document.getElementById(textarea.dataset.charCounterTarget);
+
+            if (!counter) {
+                return;
+            }
+
+            const syncCounter = () => {
+                const count = normalizeText(textarea.value).length;
+                counter.textContent = `${count} / ${min} символов`;
+
+                counter.classList.toggle('is-ok', count >= min);
+                counter.classList.toggle('is-warning', count > 0 && count < min);
+                counter.classList.toggle('is-empty', count === 0);
+            };
+
+            textarea.addEventListener('input', syncCounter);
+            syncCounter();
+        });
+    });
+</script>
 @endsection

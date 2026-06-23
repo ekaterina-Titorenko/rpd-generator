@@ -530,8 +530,15 @@ class RpdProgramController extends Controller
                 continue;
             }
 
-            if (blank($contentSection->content)) {
+            $contentLength = mb_strlen(trim(preg_replace('/\s+/u', ' ', (string) $contentSection->content)));
+
+            if ($contentLength === 0) {
                 $errors[] = "Не заполнено содержание раздела «{$section->title}».";
+                continue;
+            }
+
+            if ($contentLength < 100) {
+                $errors[] = "Описание раздела «{$section->title}» должно содержать не менее 100 символов. Сейчас: {$contentLength}.";
             }
         }
 

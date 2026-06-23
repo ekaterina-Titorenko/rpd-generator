@@ -483,13 +483,25 @@
         @else
         <div class="document-section">
             <h3>Материалы для проведения контрольных опросов</h3>
-            <p>{{ $rpdProgram->control_survey_materials ?: 'Не заполнено' }}</p>
+            <div class="numbered-text">
+                {!! $rpdProgram->control_survey_materials
+                ? nl2br(e($rpdProgram->control_survey_materials))
+                : 'Не заполнено' !!}
+            </div>
 
             <h3>Материалы для проведения итоговой практической работы</h3>
-            <p>{{ $rpdProgram->final_practical_work_materials ?: 'Не заполнено' }}</p>
+            <div class="numbered-text">
+                {!! $rpdProgram->final_practical_work_materials
+                ? nl2br(e($rpdProgram->final_practical_work_materials))
+                : 'Не заполнено' !!}
+            </div>
 
             <h3>Типовые темы проектных работ</h3>
-            <p>{{ $rpdProgram->project_topics ?: 'Не заполнено' }}</p>
+            <div class="numbered-text">
+                {!! $rpdProgram->project_topics
+                ? nl2br(e($rpdProgram->project_topics))
+                : 'Не заполнено' !!}
+            </div>
         </div>
         @endif
     </div>

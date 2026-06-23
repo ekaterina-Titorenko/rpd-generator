@@ -1628,3 +1628,49 @@ a {
 .resource-builder-form .form-field:has([data-internet-source-hint]) {
     margin-bottom: -4px;
 }
+
+.line-counter {
+    margin-top: 6px;
+    color: #9a9188;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.line-counter.is-ok {
+    color: #4f7a43;
+}
+
+.line-counter.is-warning {
+    color: #a36523;
+}
+
+.line-counter.is-empty {
+    color: #9a9188;
+}
+
+.numbered-text {
+    margin: 0 0 18px;
+    color: var(--text);
+    line-height: 1.55;
+}
+
+.char-counter {
+    margin-top: 6px;
+    color: #9a9188;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.char-counter.is-ok {
+    color: #4f7a43;
+}
+
+.char-counter.is-warning {
+    color: #a36523;
+}
+
+.char-counter.is-empty {
+    color: #9a9188;
+}

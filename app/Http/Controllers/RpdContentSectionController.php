@@ -64,7 +64,10 @@ class RpdContentSectionController extends Controller
         abort_unless($contentSection->rpd_program_id === $rpdProgram->id, 404);
 
         $validated = $request->validate([
-            'content' => ['nullable', 'string'],
+            'content' => ['required', 'string', 'min:100'],
+        ], [
+            'content.required' => 'Заполните описание раздела.',
+            'content.min' => 'Описание раздела должно содержать не менее 100 символов.',
         ]);
 
         $contentSection->update($validated);
