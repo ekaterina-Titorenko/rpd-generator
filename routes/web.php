@@ -11,6 +11,7 @@ use App\Http\Controllers\RpdProgramController;
 use App\Http\Controllers\RpdResourceController;
 use App\Http\Controllers\RpdScheduleController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RpdCommentController;
 
 Route::get('/', function () {
     return redirect()->route('rpd-programs.index');
@@ -149,6 +150,9 @@ Route::middleware('auth')->group(function () {
 
                 Route::get('download-docx', [RpdProgramController::class, 'downloadDocx'])
                     ->name('download-docx');
+
+                Route::post('comments', [RpdCommentController::class, 'store'])
+                    ->name('comments.store');
             });
     });
 });

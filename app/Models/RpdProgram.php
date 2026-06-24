@@ -122,6 +122,11 @@ class RpdProgram extends Model
         return $this->hasMany(RpdAuthor::class)->orderBy('sort_order');
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(RpdComment::class)->latest();
+    }
+
     public function getEducationFormatLabelAttribute(): string
     {
         return match ($this->education_format) {

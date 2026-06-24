@@ -19,15 +19,15 @@ $canPrint = $canDownloadDocx;
             <a href="{{ route('rpd-programs.index') }}" class="btn btn-secondary">К списку</a>
             <a href="{{ route('rpd-programs.edit', $rpdProgram) }}" class="btn btn-primary">Редактировать</a>
             @if ($canPrint)
-                <a href="{{ route('rpd-programs.print', $rpdProgram) }}" class="btn btn-secondary">
-                    Печатная версия
-                </a>
+            <a href="{{ route('rpd-programs.print', $rpdProgram) }}" class="btn btn-secondary">
+                Печатная версия
+            </a>
             @endif
 
             @if ($canDownloadDocx)
-                <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
-                    Скачать DOCX
-                </a>
+            <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
+                Скачать DOCX
+            </a>
             @endif
             <form
                 method="POST"
@@ -114,7 +114,6 @@ $canPrint = $canDownloadDocx;
             </p>
         </div>
     </div>
-
     <div class="card-body">
         <div class="review-comment">
             {{ $rpdProgram->review_comment }}
@@ -122,6 +121,70 @@ $canPrint = $canDownloadDocx;
     </div>
 </section>
 @endif
+
+<section class="card" id="section-comments">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Обсуждение и история правок</h2>
+            <p class="card-description">
+                Чат по этой РПД: ваши сообщения справа, сообщения собеседника слева.
+            </p>
+        </div>
+    </div>
+
+    <div class="card-body rpd-comments rpd-chat">
+        <div class="rpd-chat-list">
+            @forelse ($rpdProgram->comments as $comment)
+                @php
+                    $isOwnComment = $comment->user_id === auth()->id();
+                @endphp
+
+                <article class="rpd-chat-message {{ $isOwnComment ? 'rpd-chat-message-own' : 'rpd-chat-message-opponent' }}">
+                    <div class="rpd-chat-bubble">
+                        <div class="rpd-chat-meta">
+                            <strong>{{ $comment->user?->name ?? 'Пользователь' }}</strong>
+                            <span>{{ $comment->user?->role === 'admin' ? 'Администратор' : 'Преподаватель' }}</span>
+                            <time>{{ $comment->created_at?->format('d.m.Y H:i') }}</time>
+                        </div>
+
+                        <div class="rpd-chat-text">
+                            {!! nl2br(e($comment->message)) !!}
+                        </div>
+                    </div>
+                </article>
+            @empty
+                <div class="empty-state compact-empty-state">
+                    <h2>Комментариев пока нет</h2>
+                    <p>Здесь появится переписка по проверке и доработке РПД.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <form
+            method="POST"
+            action="{{ route('rpd-programs.comments.store', $rpdProgram) }}"
+            class="rpd-chat-form"
+        >
+            @csrf
+
+            <div class="form-field">
+                <label for="comment_message">Сообщение</label>
+                <textarea
+                    id="comment_message"
+                    name="message"
+                    rows="3"
+                    placeholder="Напишите замечание, вопрос или ответ...">{{ old('message') }}</textarea>
+            </div>
+
+            <div class="rpd-chat-submit-row">
+                <button type="submit" class="btn btn-primary">
+                    Отправить
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
 @if ($isAdmin && in_array($rpdProgram->status, ['draft', 'revision', 'submitted'], true))
 <section class="card" id="section-review">
     <div class="card-header">
@@ -172,48 +235,44 @@ $canPrint = $canDownloadDocx;
                 </button>
 
                 @if ($rpdProgram->status === 'submitted')
-                    <div class="review-secondary-actions">
-                        <button
-                            type="submit"
-                            class="btn btn-secondary"
-                            form="return-for-revision-form"
-                        >
-                            Вернуть на доработку
-                        </button>
+                <div class="review-secondary-actions">
+                    <button
+                        type="submit"
+                        class="btn btn-secondary"
+                        form="return-for-revision-form">
+                        Вернуть на доработку
+                    </button>
 
-                        <button
-                            type="submit"
-                            class="btn btn-danger"
-                            form="reject-form"
-                        >
-                            Отклонить
-                        </button>
-                    </div>
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                        form="reject-form">
+                        Отклонить
+                    </button>
+                </div>
                 @endif
             </form>
 
             @if ($rpdProgram->status === 'submitted')
-                <form
-                    id="return-for-revision-form"
-                    method="POST"
-                    action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}"
-                >
-                    @csrf
-                    @method('PATCH')
+            <form
+                id="return-for-revision-form"
+                method="POST"
+                action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}">
+                @csrf
+                @method('PATCH')
 
-                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-                </form>
+                <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+            </form>
 
-                <form
-                    id="reject-form"
-                    method="POST"
-                    action="{{ route('rpd-programs.reject', $rpdProgram) }}"
-                >
-                    @csrf
-                    @method('PATCH')
+            <form
+                id="reject-form"
+                method="POST"
+                action="{{ route('rpd-programs.reject', $rpdProgram) }}">
+                @csrf
+                @method('PATCH')
 
-                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-                </form>
+                <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+            </form>
             @endif
         </div>
         @else

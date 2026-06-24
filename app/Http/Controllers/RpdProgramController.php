@@ -196,6 +196,7 @@ class RpdProgramController extends Controller
             'scheduleItems',
             'authors',
             'resources',
+            'comments.user',
             'contentSections' => fn($query) => $query
                 ->whereNotNull('rpd_curriculum_item_id')
                 ->orderBy('sort_order'),
@@ -208,6 +209,7 @@ class RpdProgramController extends Controller
                 'scheduleItems',
                 'authors',
                 'resources',
+                'comments.user',
                 'contentSections' => fn($query) => $query
                     ->whereNotNull('rpd_curriculum_item_id')
                     ->orderBy('sort_order'),
