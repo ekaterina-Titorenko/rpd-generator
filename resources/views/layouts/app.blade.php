@@ -63,6 +63,41 @@
             @yield('content')
         </main>
     </div>
+
+    <button
+        type="button"
+        class="scroll-to-top"
+        data-scroll-to-top
+        aria-label="Наверх"
+        title="Наверх">
+        ↑
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const button = document.querySelector('[data-scroll-to-top]');
+
+            if (!button) {
+                return;
+            }
+
+            const toggleButton = () => {
+                button.classList.toggle('is-visible', window.scrollY > 420);
+            };
+
+            button.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth',
+                });
+            });
+
+            window.addEventListener('scroll', toggleButton, {
+                passive: true
+            });
+            toggleButton();
+        });
+    </script>
 </body>
 
 </html>

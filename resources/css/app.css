@@ -1674,3 +1674,65 @@ a {
 .char-counter.is-empty {
     color: #9a9188;
 }
+
+.scroll-to-top {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1000;
+
+    width: 46px;
+    height: 46px;
+    border: 1px solid #a9341f;
+    border-radius: 999px;
+
+    background: #b7351f;
+    color: #fffaf4;
+
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 10px 24px rgba(80, 48, 28, 0.22);
+    cursor: pointer;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition:
+        opacity 0.18s ease,
+        visibility 0.18s ease,
+        transform 0.18s ease,
+        background 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.scroll-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.scroll-to-top:hover {
+    border-color: #8f2817;
+    background: #9f2e1b;
+}
+
+.scroll-to-top:focus-visible {
+    outline: 3px solid rgba(183, 53, 31, 0.28);
+    outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+    .scroll-to-top {
+        right: 16px;
+        bottom: 16px;
+        width: 42px;
+        height: 42px;
+        font-size: 22px;
+    }
+}

@@ -316,9 +316,10 @@ class RpdDocxGenerator
         $table = new Table([
             'borderSize' => 6,
             'borderColor' => '000000',
-            'cellMargin' => 80,
+            'cellMargin' => 60,
             'width' => 100 * 50,
             'unit' => 'pct',
+            'layout' => 'fixed',
         ]);
 
         $headerCellStyle = [
@@ -350,6 +351,11 @@ class RpdDocxGenerator
             'bold' => true,
         ];
 
+        $pageUsableWidth = Converter::cmToTwip(18);
+        $sectionColumnWidth = Converter::cmToTwip(7);
+        $weeksTotalWidth = $pageUsableWidth - $sectionColumnWidth;
+        $weekColumnWidth = (int) floor($weeksTotalWidth / max(1, $weeks));
+
         $sectionColumnWidth = Converter::cmToTwip(7);
         $weeksTotalWidth = Converter::cmToTwip(15);
         $weekColumnWidth = (int) floor($weeksTotalWidth / max(1, $weeks));
@@ -380,8 +386,21 @@ class RpdDocxGenerator
         );
 
         for ($week = 1; $week <= $weeks; $week++) {
+            $weekLabel = $weeks > 4
+                ? $week . "\u{00A0}" . 'нед.'
+                : $week . "\u{00A0}" . 'неделя';
+
             $table->addCell($weekColumnWidth, $headerCellStyle)
-                ->addText($week . ' неделя', $fontBold, $center);
+                ->addText($weekLabel, [
+                    'name' => 'Times New Roman',
+                    'size' => $weeks > 4 ? 8 : 9,
+                    'bold' => true,
+                ], [
+                    'alignment' => Jc::CENTER,
+                    'spaceAfter' => 0,
+                    'spaceBefore' => 0,
+                    'lineHeight' => 1.0,
+                ]);
         }
 
         if ($sections->isEmpty()) {
