@@ -3,8 +3,10 @@ FROM node:22-alpine AS frontend
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install -g npm@11 \
-    && npm ci --include=dev --no-audit --no-fund
+RUN npm ci --include=dev --no-audit --no-fund \
+    --fetch-retries=5 \
+    --fetch-retry-mintimeout=20000 \
+    --fetch-retry-maxtimeout=120000
 
 COPY resources ./resources
 COPY vite.config.* ./
