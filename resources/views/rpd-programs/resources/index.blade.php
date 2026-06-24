@@ -217,11 +217,20 @@
         const sectionSelect = document.querySelector('[data-resource-section-select]');
         const sourceTypeSelect = document.querySelector('[data-source-type-select]');
         const internetHint = document.querySelector('[data-internet-source-hint]');
+        const sourceFields = document.querySelectorAll('[data-source-field]');
 
         if (!sectionSelect || !sourceTypeSelect) {
             return;
         }
+        const syncSourceFields = () => {
+            const selectedSourceType = sourceTypeSelect.value;
 
+            sourceFields.forEach((field) => {
+                const allowedTypes = field.dataset.sourceField.split(' ');
+
+                field.hidden = !allowedTypes.includes(selectedSourceType);
+            });
+        };
         const syncSourceType = () => {
             const isInternet = sectionSelect.value === 'internet';
 
@@ -233,7 +242,7 @@
                 if (internetHint) {
                     internetHint.hidden = false;
                 }
-
+                syncSourceFields();
                 return;
             }
 
@@ -243,6 +252,7 @@
             if (internetHint) {
                 internetHint.hidden = true;
             }
+            syncSourceFields();
         };
 
         sectionSelect.addEventListener('change', syncSourceType);
@@ -250,6 +260,8 @@
             if (sectionSelect.value === 'internet') {
                 sourceTypeSelect.value = 'electronic';
             }
+
+            syncSourceFields();
         });
 
         syncSourceType();

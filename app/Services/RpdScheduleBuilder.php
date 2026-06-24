@@ -49,7 +49,15 @@ class RpdScheduleBuilder
             return 1;
         }
 
-        return max(1, (int) ceil((int) $rpdProgram->total_hours / $hoursPerWeek));
+        $rpdProgram->loadMissing('curriculumItems');
+
+        $sectionsHours = (int) $rpdProgram->curriculumItems
+            ->where('type', 'section')
+            ->sum('total_hours');
+
+        $totalHours = max((int) $rpdProgram->total_hours, $sectionsHours);
+
+        return max(1, (int) ceil($totalHours / $hoursPerWeek));
     }
 
     public function calculateWeeksCount(RpdProgram $rpdProgram): int
