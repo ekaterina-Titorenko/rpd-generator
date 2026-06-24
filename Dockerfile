@@ -16,10 +16,6 @@ FROM php:8.4-fpm
 
 WORKDIR /var/www/html
 
-FROM php:8.4-fpm
-
-WORKDIR /var/www/html
-
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
