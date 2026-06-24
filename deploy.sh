@@ -12,7 +12,7 @@ git fetch origin
 git reset --hard "origin/${BRANCH}"
 
 echo "Build new images"
-$COMPOSE build app
+DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 $COMPOSE build app
 
 echo "Start new containers"
 $COMPOSE up -d --remove-orphans
