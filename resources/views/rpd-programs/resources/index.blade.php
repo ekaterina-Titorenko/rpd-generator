@@ -35,9 +35,7 @@
                 <option value="electronic">Электронный ресурс</option>
                 <option value="legal">Нормативный документ</option>
             </select>
-            <small class="form-hint form-hint-inline" data-internet-source-hint hidden>
-                Автоматически: «Электронный ресурс».
-            </small>
+            <input type="hidden" name="source_type" value="book" data-source-type-hidden disabled>
         </div>
 
         <div class="form-field form-field-wide" data-source-field="book article">
@@ -216,7 +214,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const sectionSelect = document.querySelector('[data-resource-section-select]');
         const sourceTypeSelect = document.querySelector('[data-source-type-select]');
-        const internetHint = document.querySelector('[data-internet-source-hint]');
+        const sourceTypeHidden = document.querySelector('[data-source-type-hidden]');
         const sourceFields = document.querySelectorAll('[data-source-field]');
 
         if (!sectionSelect || !sourceTypeSelect) {
@@ -227,8 +225,13 @@
 
             sourceFields.forEach((field) => {
                 const allowedTypes = field.dataset.sourceField.split(' ');
+                const isVisible = allowedTypes.includes(selectedSourceType);
 
-                field.hidden = !allowedTypes.includes(selectedSourceType);
+                field.hidden = !isVisible;
+
+                field.querySelectorAll('input, textarea, select').forEach((control) => {
+                    control.disabled = !isVisible;
+                });
             });
         };
         const syncSourceType = () => {
@@ -236,22 +239,34 @@
 
             if (isInternet) {
                 sourceTypeSelect.value = 'electronic';
-                sourceTypeSelect.setAttribute('readonly', 'readonly');
+                sourceTypeSelect.disabled = true;
                 sourceTypeSelect.classList.add('is-readonly-soft');
 
-                if (internetHint) {
-                    internetHint.hidden = false;
+                if (sourceTypeHidden) {
+                    sourceTypeHidden.disabled = false;
+                    sourceTypeHidden.value = 'electronic';
                 }
+
+                sourceFields.forEach((field) => {
+                    if (field.dataset.sourceField.split(' ').includes('electronic')) {
+                        field.querySelectorAll('input, textarea, select').forEach((control) => {
+                            control.disabled = false;
+                        });
+                    }
+                });
+
                 syncSourceFields();
                 return;
             }
 
-            sourceTypeSelect.removeAttribute('readonly');
+            sourceTypeSelect.disabled = false;
             sourceTypeSelect.classList.remove('is-readonly-soft');
 
-            if (internetHint) {
-                internetHint.hidden = true;
+            if (sourceTypeHidden) {
+                sourceTypeHidden.disabled = true;
+                sourceTypeHidden.value = sourceTypeSelect.value;
             }
+
             syncSourceFields();
         };
 
@@ -259,6 +274,10 @@
         sourceTypeSelect.addEventListener('change', () => {
             if (sectionSelect.value === 'internet') {
                 sourceTypeSelect.value = 'electronic';
+            }
+
+            if (sourceTypeHidden) {
+                sourceTypeHidden.value = sourceTypeSelect.value;
             }
 
             syncSourceFields();
