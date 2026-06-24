@@ -2,8 +2,11 @@ FROM node:20-alpine AS frontend
 
 WORKDIR /app
 
+ENV NODE_ENV=development
+ENV NPM_CONFIG_PRODUCTION=false
+
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev
+RUN npm ci --include=dev && npm ls vite
 
 COPY resources ./resources
 COPY vite.config.* ./
