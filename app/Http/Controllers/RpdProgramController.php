@@ -64,7 +64,7 @@ class RpdProgramController extends Controller
                 ->whereIn('id', $ids);
 
             if ($ids->isNotEmpty()) {
-                $query->orderByRaw("CASE rpd_programs.id {$ids->map(fn($id, $index) => "WHEN {$id} THEN {$index}")->implode(' ')} END");
+                $query->orderByRaw("CASE rpd_programs.id {$ids->map(fn($id,$index) => "WHEN {$id} THEN {$index}")->implode(' ')} END");
             }
         } else {
             $query = RpdProgram::query()
@@ -149,7 +149,7 @@ class RpdProgramController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'direction' => ['required', 'in:technical,science,social_humanitarian'],
-            'complexity_level' => ['required', 'string', 'max:255'],
+            'complexity_level' => ['required', 'in:базовый,продвинутый'],
             'year' => ['required', 'integer', 'min:2020', 'max:2100'],
             'smko_code' => ['nullable', 'string', 'max:255'],
             'total_hours' => ['required', 'integer', 'min:1', 'max:1000'],
@@ -159,9 +159,9 @@ class RpdProgramController extends Controller
             'min_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14'],
             'max_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14', 'gte:min_lessons_per_week'],
             'academic_hours_per_lesson' => ['required', 'integer', 'min:1', 'max:12'],
-            'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
         ]);
         $validated = $this->normalizeLessonFrequency($validated);
+        $validated['academic_hour_minutes'] = 45;
         if ($request->user()->role !== 'admin') {
             $validated['smko_code'] = null;
         }
@@ -312,7 +312,7 @@ class RpdProgramController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'direction' => ['required', 'in:technical,science,social_humanitarian'],
-            'complexity_level' => ['required', 'string', 'max:255'],
+            'complexity_level' => ['required', 'in:базовый,продвинутый'],
             'year' => ['required', 'integer', 'min:2020', 'max:2100'],
             'smko_code' => ['nullable', 'string', 'max:255'],
             'total_hours' => ['required', 'integer', 'min:1', 'max:1000'],
@@ -322,10 +322,11 @@ class RpdProgramController extends Controller
             'min_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14'],
             'max_lessons_per_week' => ['required', 'integer', 'min:1', 'max:14', 'gte:min_lessons_per_week'],
             'academic_hours_per_lesson' => ['required', 'integer', 'min:1', 'max:12'],
-            'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
 
         ]);
         $validated = $this->normalizeLessonFrequency($validated);
+
+        $validated['academic_hour_minutes'] = 45;
 
         if ($request->user()->role !== 'admin') {
             unset($validated['smko_code']);

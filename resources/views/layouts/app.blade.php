@@ -82,7 +82,7 @@
             }
 
             const toggleButton = () => {
-                button.classList.toggle('is-visible', window.scrollY > 420);
+                button.classList.toggle('is-visible', window.scrollY > 40);
             };
 
             button.addEventListener('click', () => {
