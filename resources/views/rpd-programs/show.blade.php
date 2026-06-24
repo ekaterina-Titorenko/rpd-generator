@@ -708,44 +708,48 @@ $workflowLocked = $rpdProgram->status === 'approved';
                     @method('PATCH')
                     <input type="hidden" name="smko_code" value="{{ $rpdProgram->smko_code }}">
 
-                    <div class="rpd-chat-composer rpd-chat-composer-review">
-                        <textarea
-                            id="approve_review_comment"
-                            name="review_comment"
-                            rows="1"
-                            placeholder="Комментарий к решению...">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+                    <div class="admin-decision-panel">
+                        <div class="admin-decision-header">
+                            <strong>Решение по РПД</strong>
+                            <span>Комментарий попадёт в историю проверки.</span>
+                        </div>
 
-                        @if (filled($rpdProgram->smko_code))
-                        <button type="submit" class="rpd-chat-send-button rpd-chat-send-button-approve" aria-label="Утвердить">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9.2 16.6 4.9 12.3 3.5 13.7l5.7 5.7L21 7.6 19.6 6.2z" />
-                            </svg>
-                        </button>
-                        @else
-                        <button
-                            type="button"
-                            class="rpd-chat-send-button rpd-chat-send-button-disabled"
-                            data-modal-open="smko-required-modal"
-                            title="Введите сначала СМКО"
-                            aria-label="Введите сначала СМКО">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9.2 16.6 4.9 12.3 3.5 13.7l5.7 5.7L21 7.6 19.6 6.2z" />
-                            </svg>
-                        </button>
-                        @endif
+                        <div class="form-field">
+                            <label for="approve_review_comment">Комментарий к решению</label>
+                            <textarea
+                                id="approve_review_comment"
+                                name="review_comment"
+                                rows="3"
+                                placeholder="Например: замечания устранены, РПД можно утвердить.">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+                        </div>
+
+                        <div class="admin-decision-actions">
+                            @if ($rpdProgram->status === 'submitted')
+                            <button type="submit" class="btn btn-secondary" form="return-for-revision-form">
+                                Вернуть на доработку
+                            </button>
+
+                            <button type="submit" class="btn btn-danger" form="reject-form">
+                                Отклонить
+                            </button>
+                            @endif
+
+                            @if (filled($rpdProgram->smko_code))
+                            <button type="submit" class="btn btn-primary admin-decision-approve">
+                                Утвердить
+                            </button>
+                            @else
+                            <button
+                                type="button"
+                                class="btn btn-primary admin-decision-approve admin-decision-approve-disabled"
+                                data-modal-open="smko-required-modal"
+                                title="Введите сначала СМКО"
+                                aria-label="Введите сначала СМКО">
+                                Утвердить
+                            </button>
+                            @endif
+                        </div>
                     </div>
-
-                    @if ($rpdProgram->status === 'submitted')
-                    <div class="review-secondary-actions">
-                        <button type="submit" class="btn btn-secondary" form="return-for-revision-form">
-                            Вернуть на доработку
-                        </button>
-
-                        <button type="submit" class="btn btn-danger" form="reject-form">
-                            Отклонить
-                        </button>
-                    </div>
-                    @endif
                 </form>
 
                 @if ($rpdProgram->status === 'submitted')

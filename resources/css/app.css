@@ -2079,3 +2079,50 @@ body.modal-open {
 .rpd-chat-send-button-approve:hover {
     background: #4e5d38;
 }
+
+
+.admin-decision-panel {
+    display: grid;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid #eadcc6;
+    border-radius: 16px;
+    background: #fffaf2;
+}
+
+.admin-decision-header {
+    display: grid;
+    gap: 4px;
+}
+
+.admin-decision-header strong {
+    color: var(--text);
+    font-size: 15px;
+}
+
+.admin-decision-header span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.admin-decision-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-decision-approve {
+    min-width: 130px;
+}
+
+.admin-decision-approve-disabled {
+    border-color: #c7bca9;
+    background: #b9ad9b;
+    color: #fffaf2;
+    cursor: not-allowed;
+}
+
+.admin-decision-approve-disabled:hover {
+    background: #b9ad9b;
+}
