@@ -55,7 +55,10 @@ return $direction === 'asc' ? ' ↑' : ' ↓';
             </div>
             <div class="form-field">
                 <label for="status">Статус</label>
-                <select id="status" name="status" data-live-search-input>
+                <select
+                    id="status"
+                    name="status"
+                    data-status-filter>
                     <option value="">Все статусы</option>
                     <option value="draft" @selected(request('status')==='draft' )>Черновик</option>
                     <option value="submitted" @selected(request('status')==='submitted' )>На проверке</option>
@@ -129,4 +132,23 @@ return $direction === 'asc' ? ' ↑' : ' ↓';
         </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const statusFilter = document.querySelector('[data-status-filter]');
+
+        if (!statusFilter) {
+            return;
+        }
+
+        statusFilter.addEventListener('change', () => {
+            const form = statusFilter.closest('form');
+            const params = new URLSearchParams(new FormData(form));
+
+            params.delete('page');
+
+            window.location.href = `${form.action}?${params.toString()}`;
+        });
+    });
+</script>
 @endsection
