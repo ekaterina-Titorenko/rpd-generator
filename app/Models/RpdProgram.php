@@ -124,7 +124,7 @@ class RpdProgram extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(RpdComment::class)->latest();
+        return $this->hasMany(RpdComment::class)->oldest();
     }
 
     public function getEducationFormatLabelAttribute(): string

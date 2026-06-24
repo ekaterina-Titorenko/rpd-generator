@@ -5,6 +5,24 @@
 $isAdmin = auth()->user()->role === 'admin';
 $canDownloadDocx = $isAdmin || ($rpdProgram->status === 'approved' && filled($rpdProgram->smko_code));
 $canPrint = $canDownloadDocx;
+$isTeacher = auth()->user()->role === 'teacher';
+
+$teacherCanSubmit = $isTeacher
+&& $isReadyForReview
+&& in_array($rpdProgram->status, ['draft', 'revision'], true);
+
+$adminCanReview = $isAdmin
+&& in_array($rpdProgram->status, ['draft', 'revision', 'submitted'], true);
+
+$workflowHasHistory = $rpdProgram->comments->isNotEmpty()
+|| filled($rpdProgram->review_comment);
+
+$canOpenWorkflow = $isAdmin
+|| $teacherCanSubmit
+|| $workflowHasHistory
+|| in_array($rpdProgram->status, ['submitted', 'revision', 'approved', 'rejected'], true);
+
+$workflowLocked = $rpdProgram->status === 'approved';
 @endphp
 <section class="card" id="section-general">
     <div class="card-header">
@@ -61,7 +79,15 @@ $canPrint = $canDownloadDocx;
 
         <div class="detail-item">
             <div class="detail-label">Код СМКО</div>
-            <div class="detail-value">{{ $rpdProgram->smko_code ?: 'Не указан' }}</div>
+            <div class="detail-value">
+                @if ($isAdmin)
+                <button type="button" class="smko-inline-button" data-modal-open="smko-modal">
+                    {{ $rpdProgram->smko_code ?: 'Не указан' }}
+                </button>
+                @else
+                {{ $rpdProgram->smko_code ?: 'Не указан' }}
+                @endif
+            </div>
         </div>
 
         <div class="detail-item">
@@ -103,7 +129,24 @@ $canPrint = $canDownloadDocx;
     </div>
 </section>
 
+@if ($canOpenWorkflow)
+<section class="card rpd-action-panel">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Проверка РПД</h2>
+            <p class="card-description">
+                История отправки, замечаний, доработок и утверждения.
+            </p>
+        </div>
 
+        <div class="actions">
+            <button type="button" class="btn btn-primary" data-modal-open="workflow-modal">
+                Открыть проверку
+            </button>
+        </div>
+    </div>
+</section>
+@endif
 @if ($rpdProgram->review_comment)
 <section class="card">
     <div class="card-header">
@@ -122,182 +165,6 @@ $canPrint = $canDownloadDocx;
 </section>
 @endif
 
-<section class="card" id="section-comments">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Обсуждение и история правок</h2>
-            <p class="card-description">
-                Чат по этой РПД: ваши сообщения справа, сообщения собеседника слева.
-            </p>
-        </div>
-    </div>
-
-    <div class="card-body rpd-comments rpd-chat">
-        <div class="rpd-chat-list">
-            @forelse ($rpdProgram->comments as $comment)
-                @php
-                    $isOwnComment = $comment->user_id === auth()->id();
-                @endphp
-
-                <article class="rpd-chat-message {{ $isOwnComment ? 'rpd-chat-message-own' : 'rpd-chat-message-opponent' }}">
-                    <div class="rpd-chat-bubble">
-                        <div class="rpd-chat-meta">
-                            <strong>{{ $comment->user?->name ?? 'Пользователь' }}</strong>
-                            <span>{{ $comment->user?->role === 'admin' ? 'Администратор' : 'Преподаватель' }}</span>
-                            <time>{{ $comment->created_at?->format('d.m.Y H:i') }}</time>
-                        </div>
-
-                        <div class="rpd-chat-text">
-                            {!! nl2br(e($comment->message)) !!}
-                        </div>
-                    </div>
-                </article>
-            @empty
-                <div class="empty-state compact-empty-state">
-                    <h2>Комментариев пока нет</h2>
-                    <p>Здесь появится переписка по проверке и доработке РПД.</p>
-                </div>
-            @endforelse
-        </div>
-
-        <form
-            method="POST"
-            action="{{ route('rpd-programs.comments.store', $rpdProgram) }}"
-            class="rpd-chat-form"
-        >
-            @csrf
-
-            <div class="form-field">
-                <label for="comment_message">Сообщение</label>
-                <textarea
-                    id="comment_message"
-                    name="message"
-                    rows="3"
-                    placeholder="Напишите замечание, вопрос или ответ...">{{ old('message') }}</textarea>
-            </div>
-
-            <div class="rpd-chat-submit-row">
-                <button type="submit" class="btn btn-primary">
-                    Отправить
-                </button>
-            </div>
-        </form>
-    </div>
-</section>
-
-@if ($isAdmin && in_array($rpdProgram->status, ['draft', 'revision', 'submitted'], true))
-<section class="card" id="section-review">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Проверка администратором</h2>
-            <p class="card-description">
-                Администратор может утвердить готовую РПД после проверки и присвоения СМКО.
-            </p>
-        </div>
-    </div>
-
-    <div class="card-body">
-        @if ($isReadyForReview)
-        <div class="alert alert-success">
-            РПД заполнена и может быть утверждена администратором.
-        </div>
-
-        <div class="admin-review-actions">
-            <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}" class="admin-review-form">
-                @csrf
-                @method('PATCH')
-
-                <div class="form-field">
-                    <label for="approve_smko_code">Код СМКО *</label>
-                    <input
-                        id="approve_smko_code"
-                        name="smko_code"
-                        type="text"
-                        value="{{ old('smko_code', $rpdProgram->smko_code) }}"
-                        placeholder="СМКО МИРЭА 8.5.1/03.Пр _____-1__"
-                        required>
-                    <small class="form-hint">
-                        Код СМКО обязателен для утверждения и открытия DOCX преподавателю.
-                    </small>
-                </div>
-
-                <div class="form-field">
-                    <label for="approve_review_comment">Комментарий администратора</label>
-                    <textarea
-                        id="approve_review_comment"
-                        name="review_comment"
-                        rows="3"
-                        placeholder="Необязательный комментарий при утверждении">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    Утвердить РПД
-                </button>
-
-                @if ($rpdProgram->status === 'submitted')
-                <div class="review-secondary-actions">
-                    <button
-                        type="submit"
-                        class="btn btn-secondary"
-                        form="return-for-revision-form">
-                        Вернуть на доработку
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="btn btn-danger"
-                        form="reject-form">
-                        Отклонить
-                    </button>
-                </div>
-                @endif
-            </form>
-
-            @if ($rpdProgram->status === 'submitted')
-            <form
-                id="return-for-revision-form"
-                method="POST"
-                action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}">
-                @csrf
-                @method('PATCH')
-
-                <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-            </form>
-
-            <form
-                id="reject-form"
-                method="POST"
-                action="{{ route('rpd-programs.reject', $rpdProgram) }}">
-                @csrf
-                @method('PATCH')
-
-                <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-            </form>
-            @endif
-        </div>
-        @else
-        <div class="alert alert-warning">
-            РПД пока нельзя утвердить. Заполните обязательные разделы:
-        </div>
-
-        <div class="readiness-grid readiness-grid-compact">
-            @foreach ($readiness as $item)
-            @unless ($item['is_ready'])
-            <a href="{{ $item['url'] }}" class="readiness-item readiness-item-warning">
-                <div class="readiness-status">!</div>
-
-                <div>
-                    <strong>{{ $item['title'] }}</strong>
-                    <p>{{ $item['message'] }}</p>
-                </div>
-            </a>
-            @endunless
-            @endforeach
-        </div>
-        @endif
-    </div>
-</section>
-@endif
 <section class="card" id="section-readiness">
     <div class="card-header">
         <div>
@@ -305,6 +172,7 @@ $canPrint = $canDownloadDocx;
             <p class="card-description">
                 Основные разделы, которые нужно заполнить перед отправкой на проверку.
             </p>
+
         </div>
     </div>
 
@@ -730,70 +598,382 @@ $canPrint = $canDownloadDocx;
         @endif
     </div>
 </section>
-@if (auth()->user()->role === 'teacher' && in_array($rpdProgram->status, ['draft', 'revision'], true))
-<section class="card" id="section-review">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Проверка и отправка</h2>
-            <p class="card-description">
-                Перед отправкой РПД должна быть полностью заполнена.
-            </p>
+@if ($canOpenWorkflow)
+<div class="modal-backdrop" data-modal="workflow-modal" hidden>
+    <div class="modal-dialog modal-dialog-chat" role="dialog" aria-modal="true" aria-labelledby="workflow-modal-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="workflow-modal-title">Проверка РПД</h2>
+                <p>История замечаний, доработок, отправки и утверждения.</p>
+            </div>
+
+            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть">×</button>
         </div>
 
-        @if ($isReadyForReview)
-        <form method="POST" action="{{ route('rpd-programs.submit', $rpdProgram) }}">
+        <div class="modal-body rpd-workflow">
+            <div class="rpd-chat-list" data-chat-list>
+                @forelse ($rpdProgram->comments as $comment)
+                @php
+                $isOwnComment = $comment->user_id === auth()->id();
+
+                $isSystemEvent = str_starts_with($comment->type, 'system_');
+
+                $statusLabel = match ($comment->type) {
+                'status_submitted' => 'Отправлено на проверку',
+                'status_approved' => 'Утверждено',
+                'status_revision' => 'На доработку',
+                'status_rejected' => 'Отклонено',
+                'system_update' => 'Изменение',
+                'system_smko_changed' => 'Изменён СМКО',
+                default => null,
+                };
+
+                $statusClass = match ($comment->type) {
+                'status_submitted' => 'rpd-chat-status-submitted',
+                'status_approved' => 'rpd-chat-status-approved',
+                'status_revision' => 'rpd-chat-status-revision',
+                'status_rejected' => 'rpd-chat-status-rejected',
+                'system_update' => 'rpd-chat-status-system',
+                'system_smko_changed' => 'rpd-chat-status-submitted',
+                default => '',
+                };
+                @endphp
+
+                @if ($isSystemEvent)
+                <div class="rpd-chat-system-event {{ $statusClass }}">
+                    <span class="rpd-chat-system-text">{!! nl2br(e($comment->message)) !!}</span>
+                    <span class="rpd-chat-system-separator">·</span>
+                    <span class="rpd-chat-system-user">{{ $comment->user?->name ?? 'Пользователь' }}</span>
+                    <span class="rpd-chat-system-separator">·</span>
+                    <time>{{ $comment->created_at?->format('d.m.Y H:i') }}</time>
+                </div>
+                @else
+                <article class="rpd-chat-message {{ $isOwnComment ? 'rpd-chat-message-own' : 'rpd-chat-message-opponent' }}">
+                    <div class="rpd-chat-bubble {{ $statusClass }}">
+                        <div class="rpd-chat-meta">
+                            <strong>{{ $comment->user?->name ?? 'Пользователь' }}</strong>
+                            <span>{{ $comment->user?->role === 'admin' ? 'Администратор' : 'Преподаватель' }}</span>
+                            <time>{{ $comment->created_at?->format('d.m.Y H:i') }}</time>
+                        </div>
+
+                        @if ($statusLabel)
+                        <div class="rpd-chat-status-label">
+                            {{ $statusLabel }}
+                        </div>
+                        @endif
+
+                        <div class="rpd-chat-text">
+                            {!! nl2br(e($comment->message)) !!}
+                        </div>
+                    </div>
+                </article>
+                @endif
+
+                @empty
+                <div class="empty-state compact-empty-state">
+                    <h2>История пока пуста</h2>
+                    <p>Здесь появятся отправка на проверку, замечания, доработки и утверждение.</p>
+                </div>
+                @endforelse
+            </div>
+
+            @if ($workflowLocked)
+            <div class="rpd-workflow-locked">
+                РПД утверждена. История проверки доступна только для просмотра.
+            </div>
+            @elseif ($teacherCanSubmit)
+            <form
+                method="POST"
+                action="{{ route('rpd-programs.submit', $rpdProgram) }}"
+                class="rpd-chat-composer">
+                @csrf
+                @method('PATCH')
+
+                <textarea
+                    name="workflow_comment"
+                    rows="1"
+                    placeholder="Кратко опишите, что отправляете или что исправлено...">{{ old('workflow_comment') }}</textarea>
+
+                <button type="submit" class="rpd-chat-send-button" aria-label="Отправить на проверку">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3.6 20.4L21 12 3.6 3.6 3 10.2 14.5 12 3 13.8l.6 6.6z" />
+                    </svg>
+                </button>
+            </form>
+            @elseif ($adminCanReview)
+            <div class="rpd-review-composer">
+                @if ($isReadyForReview)
+                <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}" class="admin-review-form">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="smko_code" value="{{ $rpdProgram->smko_code }}">
+
+                    <div class="rpd-chat-composer rpd-chat-composer-review">
+                        <textarea
+                            id="approve_review_comment"
+                            name="review_comment"
+                            rows="1"
+                            placeholder="Комментарий к решению...">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+
+                        @if (filled($rpdProgram->smko_code))
+                        <button type="submit" class="rpd-chat-send-button rpd-chat-send-button-approve" aria-label="Утвердить">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.6 4.9 12.3 3.5 13.7l5.7 5.7L21 7.6 19.6 6.2z" />
+                            </svg>
+                        </button>
+                        @else
+                        <button
+                            type="button"
+                            class="rpd-chat-send-button rpd-chat-send-button-disabled"
+                            data-modal-open="smko-required-modal"
+                            title="Введите сначала СМКО"
+                            aria-label="Введите сначала СМКО">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9.2 16.6 4.9 12.3 3.5 13.7l5.7 5.7L21 7.6 19.6 6.2z" />
+                            </svg>
+                        </button>
+                        @endif
+                    </div>
+
+                    @if ($rpdProgram->status === 'submitted')
+                    <div class="review-secondary-actions">
+                        <button type="submit" class="btn btn-secondary" form="return-for-revision-form">
+                            Вернуть на доработку
+                        </button>
+
+                        <button type="submit" class="btn btn-danger" form="reject-form">
+                            Отклонить
+                        </button>
+                    </div>
+                    @endif
+                </form>
+
+                @if ($rpdProgram->status === 'submitted')
+                <form id="return-for-revision-form" method="POST" action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+                </form>
+
+                <form id="reject-form" method="POST" action="{{ route('rpd-programs.reject', $rpdProgram) }}">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+                </form>
+                @endif
+                @else
+                <div class="alert alert-warning">
+                    РПД пока нельзя утвердить. Ниже перечислены незаполненные разделы.
+                </div>
+
+                <div class="readiness-grid readiness-grid-compact">
+                    @foreach ($readiness as $item)
+                    @unless ($item['is_ready'])
+                    <a href="{{ $item['url'] }}" class="readiness-item readiness-item-warning">
+                        <div class="readiness-status">!</div>
+
+                        <div>
+                            <strong>{{ $item['title'] }}</strong>
+                            <p>{{ $item['message'] }}</p>
+                        </div>
+                    </a>
+                    @endunless
+                    @endforeach
+                </div>
+                @endif
+            </div>
+            @else
+            <div class="rpd-workflow-locked">
+                Сейчас РПД находится в статусе «{{ $rpdProgram->status_label }}». Действия недоступны.
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
+@if ($canOpenWorkflow)
+<button
+    type="button"
+    class="workflow-floating-button"
+    data-modal-open="workflow-modal"
+    aria-label="Проверка РПД"
+    title="Проверка РПД">
+    ✓
+</button>
+@endif
+
+@if ($isAdmin)
+<div class="modal-backdrop" data-modal="smko-modal" hidden>
+    <div class="modal-dialog modal-dialog-small" role="dialog" aria-modal="true" aria-labelledby="smko-modal-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="smko-modal-title">Код СМКО</h2>
+                <p>Укажите код СМКО для этой РПД.</p>
+            </div>
+
+            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть">×</button>
+        </div>
+
+        <form method="POST" action="{{ route('rpd-programs.update-smko-code', $rpdProgram) }}" class="modal-body smko-modal-form">
             @csrf
             @method('PATCH')
 
-            <button type="submit" class="btn btn-primary">
-                Отправить на проверку
-            </button>
+            <div class="form-field">
+                <label for="smko_code_modal">Код СМКО</label>
+                <input
+                    id="smko_code_modal"
+                    name="smko_code"
+                    type="text"
+                    value="{{ old('smko_code', $rpdProgram->smko_code) }}"
+                    placeholder="СМКО МИРЭА 8.5.1/03.Пр _____-1__"
+                    required>
+            </div>
+
+            <div class="modal-actions-row">
+                <button type="button" class="btn btn-secondary" data-modal-close>
+                    Отмена
+                </button>
+
+                <button type="submit" class="btn btn-primary">
+                    Сохранить
+                </button>
+            </div>
         </form>
-        @endif
     </div>
+</div>
 
-    @unless ($isReadyForReview)
-    <div class="card-body">
-        <div class="alert alert-warning">
-            РПД пока нельзя отправить на проверку. Заполните обязательные разделы:
+<div class="modal-backdrop" data-modal="smko-required-modal" hidden>
+    <div class="modal-dialog modal-dialog-small" role="dialog" aria-modal="true" aria-labelledby="smko-required-modal-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="smko-required-modal-title">Нужен код СМКО</h2>
+                <p>Перед утверждением РПД необходимо указать код СМКО.</p>
+            </div>
+
+            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть">×</button>
         </div>
 
-        <div class="readiness-grid readiness-grid-compact">
-            @foreach ($readiness as $item)
-            @unless ($item['is_ready'])
-            <a href="{{ $item['url'] }}" class="readiness-item readiness-item-warning">
-                <div class="readiness-status">!</div>
+        <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}" class="modal-body smko-modal-form">
+            @csrf
+            @method('PATCH')
 
-                <div>
-                    <strong>{{ $item['title'] }}</strong>
-                    <p>{{ $item['message'] }}</p>
-                </div>
-            </a>
-            @endunless
-            @endforeach
-        </div>
+            <div class="form-field">
+                <label for="smko_code_required">Код СМКО</label>
+                <input
+                    id="smko_code_required"
+                    name="smko_code"
+                    type="text"
+                    value="{{ old('smko_code', $rpdProgram->smko_code) }}"
+                    placeholder="СМКО МИРЭА 8.5.1/03.Пр _____-1__"
+                    required>
+            </div>
+
+            <input type="hidden" name="review_comment" value="{{ old('review_comment', $rpdProgram->review_comment) }}">
+
+            <div class="modal-actions-row">
+                <button type="button" class="btn btn-secondary" data-modal-close>
+                    Отмена
+                </button>
+
+                <button type="submit" class="btn btn-primary">
+                    Указать СМКО и утвердить
+                </button>
+            </div>
+        </form>
     </div>
-    @endunless
-</section>
+</div>
 @endif
+
 {{-- (removed duplicate admin review section) --}}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const openModal = (modalName) => {
+            const modal = document.querySelector(`[data-modal="${modalName}"]`);
+
+            if (!modal) {
+                return;
+            }
+
+            modal.hidden = false;
+            document.body.classList.add('modal-open');
+
+            const chatList = modal.querySelector('[data-chat-list]');
+
+            if (chatList) {
+                setTimeout(() => {
+                    chatList.scrollTop = chatList.scrollHeight;
+                }, 50);
+            }
+
+            const focusTarget = modal.querySelector('textarea, input, button');
+
+            if (focusTarget) {
+                setTimeout(() => focusTarget.focus(), 50);
+            }
+        };
+
+        const closeModal = (modal) => {
+            if (!modal) {
+                return;
+            }
+
+            modal.hidden = true;
+
+            if (!document.querySelector('[data-modal]:not([hidden])')) {
+                document.body.classList.remove('modal-open');
+            }
+        };
+
+        document.querySelectorAll('[data-modal-open]').forEach((button) => {
+            button.addEventListener('click', () => {
+                openModal(button.dataset.modalOpen);
+            });
+        });
+
+        document.querySelectorAll('[data-modal-close]').forEach((button) => {
+            button.addEventListener('click', () => {
+                closeModal(button.closest('[data-modal]'));
+            });
+        });
+
+        document.querySelectorAll('[data-modal]').forEach((modal) => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(modal);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            document.querySelectorAll('[data-modal]:not([hidden])').forEach(closeModal);
+        });
+
         const reviewComment = document.querySelector('#approve_review_comment');
         const commentCopies = document.querySelectorAll('[data-review-comment-copy]');
 
-        if (!reviewComment || commentCopies.length === 0) {
-            return;
+        if (reviewComment && commentCopies.length > 0) {
+            const syncReviewComment = () => {
+                commentCopies.forEach((input) => {
+                    input.value = reviewComment.value;
+                });
+            };
+
+            reviewComment.addEventListener('input', syncReviewComment);
+            syncReviewComment();
         }
 
-        const syncReviewComment = () => {
-            commentCopies.forEach((input) => {
-                input.value = reviewComment.value;
-            });
-        };
+        const autoOpenModal = @json(session('open_modal'));
 
-        reviewComment.addEventListener('input', syncReviewComment);
-        syncReviewComment();
+        if (autoOpenModal) {
+            openModal(autoOpenModal);
+        }
+
+
     });
 </script>
 @endsection

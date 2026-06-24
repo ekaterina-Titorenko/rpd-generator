@@ -51,6 +51,9 @@ Route::middleware('auth')->group(function () {
             ->middleware('role:admin')
             ->name('rpd-programs.approve');
 
+        Route::patch('rpd-programs/{rpdProgram}/smko-code', [RpdProgramController::class, 'updateSmkoCode'])
+            ->name('rpd-programs.update-smko-code');
+
         Route::patch('rpd-programs/{rpdProgram}/reject', [RpdProgramController::class, 'reject'])
             ->middleware('role:admin')
             ->name('rpd-programs.reject');
@@ -74,6 +77,8 @@ Route::middleware('auth')->group(function () {
                 Route::delete('users/{user}', [AdminUserController::class, 'destroy'])
                     ->name('users.destroy');
             });
+
+
 
         Route::prefix('rpd-programs/{rpdProgram}')
             ->name('rpd-programs.')

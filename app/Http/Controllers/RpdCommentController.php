@@ -24,7 +24,9 @@ class RpdCommentController extends Controller
             'message' => $validated['message'],
         ]);
 
-        return back()->with('success', 'Комментарий добавлен.');
+        return back()
+            ->with('success', 'Комментарий добавлен.')
+            ->with('open_modal', 'workflow-modal');
     }
 
     private function authorizeProgramAccess(Request $request, RpdProgram $rpdProgram): void

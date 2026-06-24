@@ -183,6 +183,7 @@ class RpdProgramController extends Controller
 
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД создана.');
     }
 
@@ -339,6 +340,7 @@ class RpdProgramController extends Controller
 
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'Общие сведения РПД обновлены.');
     }
 
@@ -385,6 +387,7 @@ class RpdProgramController extends Controller
 
         return redirect()
             ->route('rpd-programs.index')
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД удалена.');
     }
 
@@ -421,8 +424,18 @@ class RpdProgramController extends Controller
             'review_comment' => null,
         ]);
 
+        $workflowComment = trim((string) $request->input('workflow_comment'));
+
+        $this->addRpdActivity(
+            $request,
+            $rpdProgram,
+            'status_submitted',
+            $workflowComment !== '' ? $workflowComment : 'РПД отправлена на проверку.'
+        );
+
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД отправлена на проверку.');
     }
 
@@ -432,11 +445,6 @@ class RpdProgramController extends Controller
 
         abort_unless($request->user()->role === 'admin', 403);
 
-        $errors = $this->validateBeforeSubmit($rpdProgram);
-
-        if (! empty($errors)) {
-            return back()->withErrors($errors);
-        }
 
         $validated = $request->validate([
             'review_comment' => ['required', 'string'],
@@ -447,9 +455,51 @@ class RpdProgramController extends Controller
             'review_comment' => $validated['review_comment'],
         ]);
 
+        $this->addRpdActivity(
+            $request,
+            $rpdProgram,
+            'status_revision',
+            $validated['review_comment']
+        );
+
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД возвращена на доработку.');
+    }
+
+    public function updateSmkoCode(Request $request, RpdProgram $rpdProgram)
+    {
+        $this->authorizeProgramAccess($request, $rpdProgram);
+
+        abort_unless($request->user()->role === 'admin', 403);
+
+        $validated = $request->validate([
+            'smko_code' => ['required', 'string', 'max:255'],
+        ], [
+            'smko_code.required' => 'Укажите код СМКО.',
+        ]);
+
+        $oldSmkoCode = $rpdProgram->smko_code;
+
+        $rpdProgram->update([
+            'smko_code' => $validated['smko_code'],
+        ]);
+
+        $message = $oldSmkoCode
+            ? 'Код СМКО изменён'
+            : 'Код СМКО указан';
+
+        $this->addRpdActivity(
+            $request,
+            $rpdProgram,
+            'system_smko_changed',
+            $message
+        );
+
+        return redirect()
+            ->route('rpd-programs.show', $rpdProgram)
+            ->with('success', 'Код СМКО сохранён.');
     }
 
     public function approve(Request $request, RpdProgram $rpdProgram)
@@ -465,14 +515,24 @@ class RpdProgramController extends Controller
             'smko_code.required' => 'Перед утверждением нужно присвоить код СМКО.',
         ]);
 
+        $approvalComment = $validated['review_comment'] ?? 'РПД утверждена.';
+
         $rpdProgram->update([
             'status' => 'approved',
             'smko_code' => $validated['smko_code'],
             'review_comment' => $validated['review_comment'] ?? null,
         ]);
 
+        $this->addRpdActivity(
+            $request,
+            $rpdProgram,
+            'status_approved',
+            $approvalComment
+        );
+
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД утверждена.');
     }
 
@@ -491,8 +551,16 @@ class RpdProgramController extends Controller
             'review_comment' => $validated['review_comment'],
         ]);
 
+        $this->addRpdActivity(
+            $request,
+            $rpdProgram,
+            'status_rejected',
+            $validated['review_comment']
+        );
+
         return redirect()
             ->route('rpd-programs.show', $rpdProgram)
+            ->with('open_modal', 'workflow-modal')
             ->with('success', 'РПД отклонена.');
     }
 
@@ -693,6 +761,15 @@ class RpdProgramController extends Controller
                 'Составлять план решения проблемы.',
             ],
         ];
+    }
+
+    private function addRpdActivity(Request $request, RpdProgram $rpdProgram, string $type, string $message): void
+    {
+        $rpdProgram->comments()->create([
+            'user_id' => $request->user()->id,
+            'type' => $type,
+            'message' => $message,
+        ]);
     }
 
     public function print(Request $request, RpdProgram $rpdProgram)
