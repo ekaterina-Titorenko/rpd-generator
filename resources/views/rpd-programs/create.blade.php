@@ -62,6 +62,7 @@
                 required>
         </div>
 
+        @if (auth()->user()->role === 'admin')
         <div class="form-field">
             <label for="smko_code">Код СМКО</label>
             <input
@@ -71,6 +72,7 @@
                 value="{{ old('smko_code') }}"
                 placeholder="СМКО МИРЭА 8.5.1/03.Пр _____-1__">
         </div>
+        @endif
 
         <div class="form-field">
             <label for="total_hours">Объем программы, ак. часов *</label>

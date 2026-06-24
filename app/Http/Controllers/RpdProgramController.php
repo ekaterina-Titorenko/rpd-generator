@@ -15,6 +15,21 @@ class RpdProgramController extends Controller
         $sort = (string) $request->get('sort', 'created_at');
         $direction = $request->get('direction', 'desc') === 'asc' ? 'asc' : 'desc';
 
+        $status = (string) $request->get('status', '');
+
+        $allowedStatuses = [
+            'draft',
+            'submitted',
+            'revision',
+            'approved',
+            'rejected',
+            'generated',
+        ];
+
+        if ($status !== '' && ! in_array($status, $allowedStatuses, true)) {
+            $status = '';
+        }
+
         $allowedSorts = [
             'title',
             'teacher',
@@ -36,7 +51,6 @@ class RpdProgramController extends Controller
             if ($request->user()->role !== 'admin') {
                 $builder->where('user_id', $request->user()->id);
             }
-
             $builder->orderBy($sortColumn, $direction);
 
             $ids = $builder
@@ -50,9 +64,7 @@ class RpdProgramController extends Controller
                 ->whereIn('id', $ids);
 
             if ($ids->isNotEmpty()) {
-                $idsList = $ids->implode(',');
-
-                $query->orderByRaw("CASE id {$ids->map(fn($id,$index) => "WHEN {$id} THEN {$index}")->implode(' ')} END");
+                $query->orderByRaw("CASE rpd_programs.id {$ids->map(fn($id, $index) => "WHEN {$id} THEN {$index}")->implode(' ')} END");
             }
         } else {
             $query = RpdProgram::query()
@@ -75,6 +87,10 @@ class RpdProgramController extends Controller
             }
         }
 
+        if ($status !== '') {
+            $query->where('rpd_programs.status', $status);
+        }
+
         $rpdPrograms = $query
             ->paginate(15)
             ->withQueryString();
@@ -83,7 +99,8 @@ class RpdProgramController extends Controller
             return view('rpd-programs._table', compact(
                 'rpdPrograms',
                 'sort',
-                'direction'
+                'direction',
+                'status'
             ));
         }
 
@@ -92,20 +109,18 @@ class RpdProgramController extends Controller
                 'rows' => view('rpd-programs._rows', compact(
                     'rpdPrograms',
                     'sort',
-                    'direction'
+                    'direction',
+                    'status'
                 ))->render(),
                 'pagination' => $rpdPrograms->links()->render(),
             ]);
         }
 
         return view('rpd-programs.index', compact(
-
             'rpdPrograms',
-
             'sort',
-
-            'direction'
-
+            'direction',
+            'status'
         ));
     }
 
@@ -147,6 +162,10 @@ class RpdProgramController extends Controller
             'academic_hour_minutes' => ['required', 'integer', 'min:30', 'max:60'],
         ]);
         $validated = $this->normalizeLessonFrequency($validated);
+        if ($request->user()->role !== 'admin') {
+            $validated['smko_code'] = null;
+        }
+
         $standardTexts = $this->makeStandardTexts($validated);
 
         $directionTexts = $this->makeDirectionTexts($validated);
@@ -307,6 +326,10 @@ class RpdProgramController extends Controller
 
         ]);
         $validated = $this->normalizeLessonFrequency($validated);
+
+        if ($request->user()->role !== 'admin') {
+            unset($validated['smko_code']);
+        }
         $standardTexts = $this->makeStandardTexts($validated);
 
         $rpdProgram->update(array_merge($validated, $standardTexts));
@@ -433,11 +456,15 @@ class RpdProgramController extends Controller
         abort_unless($request->user()->role === 'admin', 403);
 
         $validated = $request->validate([
+            'smko_code' => ['required', 'string', 'max:255'],
             'review_comment' => ['nullable', 'string'],
+        ], [
+            'smko_code.required' => 'Перед утверждением нужно присвоить код СМКО.',
         ]);
 
         $rpdProgram->update([
             'status' => 'approved',
+            'smko_code' => $validated['smko_code'],
             'review_comment' => $validated['review_comment'] ?? null,
         ]);
 
@@ -670,7 +697,7 @@ class RpdProgramController extends Controller
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         abort_unless(
-            $rpdProgram->status === 'approved' || $request->user()->role === 'admin',
+            $this->canDownloadDocx($request, $rpdProgram),
             403
         );
 
@@ -691,12 +718,22 @@ class RpdProgramController extends Controller
         return view('rpd-programs.print', compact('rpdProgram', 'curriculumItems'));
     }
 
+    private function canDownloadDocx(Request $request, RpdProgram $rpdProgram): bool
+    {
+        if ($request->user()->role === 'admin') {
+            return true;
+        }
+
+        return $rpdProgram->status === 'approved'
+            && filled($rpdProgram->smko_code);
+    }
+
     public function downloadDocx(Request $request, RpdProgram $rpdProgram, RpdDocxGenerator $generator)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         abort_unless(
-            $rpdProgram->status === 'approved' || $request->user()->role === 'admin',
+            $this->canDownloadDocx($request, $rpdProgram),
             403
         );
 

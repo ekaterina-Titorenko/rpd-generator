@@ -19,9 +19,14 @@
             </a>
             @endif
             @if ($rpdProgram->status === 'approved' || auth()->user()->role === 'admin')
+            @if (
+            auth()->user()->role === 'admin'
+            || ($rpdProgram->status === 'approved' && filled($rpdProgram->smko_code))
+            )
             <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
                 Скачать DOCX
             </a>
+            @endif
             @endif
             <form
                 method="POST"

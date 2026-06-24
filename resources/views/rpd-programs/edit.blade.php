@@ -75,6 +75,7 @@ $defaultMaxLessons = $lessonNumbers->count() > 1 ? $lessonNumbers->max() : $defa
                 required>
         </div>
 
+        @if (auth()->user()->role === 'admin')
         <div class="form-field">
             <label for="smko_code">Код СМКО</label>
             <input
@@ -82,7 +83,17 @@ $defaultMaxLessons = $lessonNumbers->count() > 1 ? $lessonNumbers->max() : $defa
                 name="smko_code"
                 type="text"
                 value="{{ old('smko_code', $rpdProgram->smko_code) }}">
+            <small class="form-hint">Преподаватель не может изменять код СМКО.</small>
         </div>
+        @elseif (filled($rpdProgram->smko_code))
+        <div class="form-field">
+            <label>Код СМКО</label>
+            <div class="readonly-value">
+                {{ $rpdProgram->smko_code }}
+            </div>
+            <small class="form-hint">Код присвоен администратором.</small>
+        </div>
+        @endif
 
         <div class="form-field">
             <label for="total_hours">Объем программы, ак. часов *</label>
