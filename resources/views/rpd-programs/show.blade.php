@@ -708,14 +708,9 @@ $workflowLocked = $rpdProgram->status === 'approved';
                     @method('PATCH')
                     <input type="hidden" name="smko_code" value="{{ $rpdProgram->smko_code }}">
 
-                    <div class="admin-decision-panel">
-                        <div class="admin-decision-header">
-                            <strong>Решение по РПД</strong>
-                            <span>Комментарий попадёт в историю проверки.</span>
-                        </div>
-
+                    <div class="admin-decision-panel admin-decision-panel-flat">
                         <div class="form-field">
-                            <label for="approve_review_comment">Комментарий к решению</label>
+                            <label for="approve_review_comment">Комментарий администратора</label>ы
                             <textarea
                                 id="approve_review_comment"
                                 name="review_comment"

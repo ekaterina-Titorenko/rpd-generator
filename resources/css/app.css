@@ -2083,26 +2083,18 @@ body.modal-open {
 
 .admin-decision-panel {
     display: grid;
-    gap: 14px;
-    padding: 14px;
-    border: 1px solid #eadcc6;
-    border-radius: 16px;
-    background: #fffaf2;
+    gap: 12px;
+}
+
+.admin-decision-panel-flat {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .admin-decision-header {
-    display: grid;
-    gap: 4px;
-}
-
-.admin-decision-header strong {
-    color: var(--text);
-    font-size: 15px;
-}
-
-.admin-decision-header span {
-    color: var(--muted);
-    font-size: 13px;
+    display: none;
 }
 
 .admin-decision-actions {
