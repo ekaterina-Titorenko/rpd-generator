@@ -710,7 +710,7 @@ $workflowLocked = $rpdProgram->status === 'approved';
 
                     <div class="admin-decision-panel admin-decision-panel-flat">
                         <div class="form-field">
-                            <label for="approve_review_comment">Комментарий администратора</label>ы
+                            <label for="approve_review_comment">Комментарий администратора</label>
                             <textarea
                                 id="approve_review_comment"
                                 name="review_comment"
