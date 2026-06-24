@@ -2118,3 +2118,10 @@ body.modal-open {
 .admin-decision-approve-disabled:hover {
     background: #b9ad9b;
 }
+
+.admin-review-comment-error {
+    margin-top: 6px;
+    color: #8c322a;
+    font-size: 13px;
+    font-weight: 700;
+}

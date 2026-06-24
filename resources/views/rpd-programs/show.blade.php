@@ -716,15 +716,18 @@ $workflowLocked = $rpdProgram->status === 'approved';
                                 name="review_comment"
                                 rows="3"
                                 placeholder="Например: замечания устранены, РПД можно утвердить.">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+                            <div class="admin-review-comment-error" data-review-comment-error hidden>
+                                Для возврата на доработку или отклонения нужно указать комментарий.
+                            </div>
                         </div>
 
                         <div class="admin-decision-actions">
                             @if ($rpdProgram->status === 'submitted')
-                            <button type="submit" class="btn btn-secondary" form="return-for-revision-form">
+                            <button type="submit" class="btn btn-secondary" form="return-for-revision-form" data-requires-review-comment>
                                 Вернуть на доработку
                             </button>
 
-                            <button type="submit" class="btn btn-danger" form="reject-form">
+                            <button type="submit" class="btn btn-danger" form="reject-form" data-requires-review-comment>
                                 Отклонить
                             </button>
                             @endif
@@ -955,16 +958,45 @@ $workflowLocked = $rpdProgram->status === 'approved';
         const reviewComment = document.querySelector('#approve_review_comment');
         const commentCopies = document.querySelectorAll('[data-review-comment-copy]');
 
-        if (reviewComment && commentCopies.length > 0) {
+
+        if (reviewComment && commentCopies.length) {
+            const commentError = document.querySelector('[data-review-comment-error]');
+            const commentRequiredButtons = document.querySelectorAll('[data-requires-review-comment]');
+
             const syncReviewComment = () => {
                 commentCopies.forEach((input) => {
                     input.value = reviewComment.value;
                 });
+
+                if (commentError && reviewComment.value.trim() !== '') {
+                    commentError.hidden = true;
+                }
+            };
+
+            const showReviewCommentError = () => {
+                if (commentError) {
+                    commentError.hidden = false;
+                }
+
+                reviewComment.focus();
             };
 
             reviewComment.addEventListener('input', syncReviewComment);
+
+            commentRequiredButtons.forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    syncReviewComment();
+
+                    if (reviewComment.value.trim() === '') {
+                        event.preventDefault();
+                        showReviewCommentError();
+                    }
+                });
+            });
+
             syncReviewComment();
         }
+
 
         const autoOpenModal = @json(session('open_modal'));
 
