@@ -1,6 +1,11 @@
 @extends('layouts.app', ['title' => $rpdProgram->title])
 
 @section('content')
+@php
+$isAdmin = auth()->user()->role === 'admin';
+$canDownloadDocx = $isAdmin || ($rpdProgram->status === 'approved' && filled($rpdProgram->smko_code));
+$canPrint = $canDownloadDocx;
+@endphp
 <section class="card" id="section-general">
     <div class="card-header">
         <div>
@@ -13,20 +18,16 @@
         <div class="actions">
             <a href="{{ route('rpd-programs.index') }}" class="btn btn-secondary">К списку</a>
             <a href="{{ route('rpd-programs.edit', $rpdProgram) }}" class="btn btn-primary">Редактировать</a>
-            @if ($rpdProgram->status === 'approved' || auth()->user()->role === 'admin')
-            <a href="{{ route('rpd-programs.print', $rpdProgram) }}" class="btn btn-secondary">
-                Печатная версия
-            </a>
+            @if ($canPrint)
+                <a href="{{ route('rpd-programs.print', $rpdProgram) }}" class="btn btn-secondary">
+                    Печатная версия
+                </a>
             @endif
-            @if ($rpdProgram->status === 'approved' || auth()->user()->role === 'admin')
-            @if (
-            auth()->user()->role === 'admin'
-            || ($rpdProgram->status === 'approved' && filled($rpdProgram->smko_code))
-            )
-            <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
-                Скачать DOCX
-            </a>
-            @endif
+
+            @if ($canDownloadDocx)
+                <a href="{{ route('rpd-programs.download-docx', $rpdProgram) }}" class="btn btn-primary">
+                    Скачать DOCX
+                </a>
             @endif
             <form
                 method="POST"
@@ -121,32 +122,99 @@
     </div>
 </section>
 @endif
-@if (auth()->user()->role === 'admin' && $rpdProgram->status !== 'submitted')
+@if ($isAdmin && in_array($rpdProgram->status, ['draft', 'revision', 'submitted'], true))
 <section class="card" id="section-review">
     <div class="card-header">
         <div>
             <h2 class="card-title">Проверка администратором</h2>
             <p class="card-description">
-                Администратор может утвердить готовую РПД без отдельной отправки на проверку.
+                Администратор может утвердить готовую РПД после проверки и присвоения СМКО.
             </p>
         </div>
-
-        @if ($isReadyForReview && in_array($rpdProgram->status, ['draft', 'revision'], true))
-        <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}">
-            @csrf
-            @method('PATCH')
-
-            <button type="submit" class="btn btn-primary">
-                Утвердить РПД
-            </button>
-        </form>
-        @endif
     </div>
 
     <div class="card-body">
         @if ($isReadyForReview)
         <div class="alert alert-success">
             РПД заполнена и может быть утверждена администратором.
+        </div>
+
+        <div class="admin-review-actions">
+            <form method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}" class="admin-review-form">
+                @csrf
+                @method('PATCH')
+
+                <div class="form-field">
+                    <label for="approve_smko_code">Код СМКО *</label>
+                    <input
+                        id="approve_smko_code"
+                        name="smko_code"
+                        type="text"
+                        value="{{ old('smko_code', $rpdProgram->smko_code) }}"
+                        placeholder="СМКО МИРЭА 8.5.1/03.Пр _____-1__"
+                        required>
+                    <small class="form-hint">
+                        Код СМКО обязателен для утверждения и открытия DOCX преподавателю.
+                    </small>
+                </div>
+
+                <div class="form-field">
+                    <label for="approve_review_comment">Комментарий администратора</label>
+                    <textarea
+                        id="approve_review_comment"
+                        name="review_comment"
+                        rows="3"
+                        placeholder="Необязательный комментарий при утверждении">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Утвердить РПД
+                </button>
+
+                @if ($rpdProgram->status === 'submitted')
+                    <div class="review-secondary-actions">
+                        <button
+                            type="submit"
+                            class="btn btn-secondary"
+                            form="return-for-revision-form"
+                        >
+                            Вернуть на доработку
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn btn-danger"
+                            form="reject-form"
+                        >
+                            Отклонить
+                        </button>
+                    </div>
+                @endif
+            </form>
+
+            @if ($rpdProgram->status === 'submitted')
+                <form
+                    id="return-for-revision-form"
+                    method="POST"
+                    action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}"
+                >
+                    @csrf
+                    @method('PATCH')
+
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+                </form>
+
+                <form
+                    id="reject-form"
+                    method="POST"
+                    action="{{ route('rpd-programs.reject', $rpdProgram) }}"
+                >
+                    @csrf
+                    @method('PATCH')
+
+                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
+                </form>
+            @endif
         </div>
         @else
         <div class="alert alert-warning">
@@ -649,63 +717,24 @@
     @endunless
 </section>
 @endif
-@if (auth()->user()->role === 'admin' && $rpdProgram->status === 'submitted')
-<section class="card" id="section-review">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Проверка администратором</h2>
-            <p class="card-description">
-                Укажите комментарий при возврате на доработку или отклонении. При утверждении комментарий необязателен.
-            </p>
-        </div>
-    </div>
+{{-- (removed duplicate admin review section) --}}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const reviewComment = document.querySelector('#approve_review_comment');
+        const commentCopies = document.querySelectorAll('[data-review-comment-copy]');
 
-    <div class="card-body">
-        <div class="review-actions">
-            <div class="form-field form-field-wide">
-                <label for="review_comment">Комментарий администратора</label>
-                <textarea
-                    id="review_comment"
-                    name="review_comment"
-                    rows="4"
-                    form="approve-form"
-                    placeholder="Например: уточнить календарный график, исправить распределение часов, добавить литературу.">{{ old('review_comment', $rpdProgram->review_comment) }}</textarea>
-            </div>
+        if (!reviewComment || commentCopies.length === 0) {
+            return;
+        }
 
-            <div class="review-buttons">
-                <form id="approve-form" method="POST" action="{{ route('rpd-programs.approve', $rpdProgram) }}">
-                    @csrf
-                    @method('PATCH')
+        const syncReviewComment = () => {
+            commentCopies.forEach((input) => {
+                input.value = reviewComment.value;
+            });
+        };
 
-                    <button type="submit" class="btn btn-primary">
-                        Утвердить
-                    </button>
-                </form>
-
-                <form method="POST" action="{{ route('rpd-programs.return-for-revision', $rpdProgram) }}">
-                    @csrf
-                    @method('PATCH')
-
-                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-
-                    <button type="submit" class="btn btn-secondary">
-                        Вернуть на доработку
-                    </button>
-                </form>
-
-                <form method="POST" action="{{ route('rpd-programs.reject', $rpdProgram) }}">
-                    @csrf
-                    @method('PATCH')
-
-                    <input type="hidden" name="review_comment" value="" data-review-comment-copy>
-
-                    <button type="submit" class="btn btn-danger">
-                        Отклонить
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
-@endif
+        reviewComment.addEventListener('input', syncReviewComment);
+        syncReviewComment();
+    });
+</script>
 @endsection

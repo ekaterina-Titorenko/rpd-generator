@@ -1666,3 +1666,17 @@ a {
         font-size: 22px;
     }
 }
+
+.admin-review-actions {
+    margin-top: 18px;
+}
+
+.admin-review-form {
+    display: grid;
+    gap: 14px;
+    max-width: 720px;
+    padding: 16px;
+    border: 1px solid #d8ccb8;
+    border-radius: 14px;
+    background: rgba(242, 227, 179, 0.28);
+}
