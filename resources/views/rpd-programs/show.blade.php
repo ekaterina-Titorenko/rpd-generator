@@ -129,41 +129,6 @@ $workflowLocked = $rpdProgram->status === 'approved';
     </div>
 </section>
 
-@if ($canOpenWorkflow)
-<section class="card rpd-action-panel">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Проверка РПД</h2>
-            <p class="card-description">
-                История отправки, замечаний, доработок и утверждения.
-            </p>
-        </div>
-
-        <div class="actions">
-            <button type="button" class="btn btn-primary" data-modal-open="workflow-modal">
-                Открыть проверку
-            </button>
-        </div>
-    </div>
-</section>
-@endif
-@if ($rpdProgram->review_comment)
-<section class="card">
-    <div class="card-header">
-        <div>
-            <h2 class="card-title">Комментарий администратора</h2>
-            <p class="card-description">
-                Комментарий по результатам проверки РПД.
-            </p>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="review-comment">
-            {{ $rpdProgram->review_comment }}
-        </div>
-    </div>
-</section>
-@endif
 
 <section class="card" id="section-readiness">
     <div class="card-header">
@@ -193,6 +158,24 @@ $workflowLocked = $rpdProgram->status === 'approved';
         @endforeach
     </div>
 </section>
+@if ($canOpenWorkflow)
+<section class="card rpd-action-panel">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Проверка РПД</h2>
+            <p class="card-description">
+                История отправки, замечаний, доработок и утверждения.
+            </p>
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn btn-primary" data-modal-open="workflow-modal">
+                Открыть проверку
+            </button>
+        </div>
+    </div>
+</section>
+@endif
 <section class="card" id="section-characteristics">
     <div class="card-header">
         <div>
@@ -634,7 +617,7 @@ $workflowLocked = $rpdProgram->status === 'approved';
                 'status_revision' => 'rpd-chat-status-revision',
                 'status_rejected' => 'rpd-chat-status-rejected',
                 'system_update' => 'rpd-chat-status-system',
-                'system_smko_changed' => 'rpd-chat-status-submitted',
+                'system_smko_changed' => 'rpd-chat-status-system',
                 default => '',
                 };
                 @endphp
