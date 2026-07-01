@@ -93,7 +93,7 @@ class RpdCurriculumItemController extends Controller
 
         $this->renumberProgram($rpdProgram);
         $this->syncContentSections($rpdProgram);
-        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
+        app(RpdScheduleBuilder::class)->regenerate($rpdProgram);
 
         $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: добавлена строка.');
 
@@ -122,7 +122,7 @@ class RpdCurriculumItemController extends Controller
 
         $curriculumItem->update($validated);
         $this->syncContentSections($rpdProgram);
-        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
+        app(RpdScheduleBuilder::class)->regenerate($rpdProgram);
 
         $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: обновлена строка.');
 
@@ -146,7 +146,7 @@ class RpdCurriculumItemController extends Controller
 
         $this->renumberProgram($rpdProgram);
         $this->syncContentSections($rpdProgram);
-        app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
+        app(RpdScheduleBuilder::class)->regenerate($rpdProgram);
 
         $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: удалена строка.');
 
