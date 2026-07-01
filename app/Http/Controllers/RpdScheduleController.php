@@ -6,6 +6,7 @@ use App\Models\RpdCurriculumItem;
 use App\Models\RpdProgram;
 use App\Services\RpdScheduleBuilder;
 use Illuminate\Http\Request;
+use App\Services\RpdActivityLogger;
 
 class RpdScheduleController extends Controller
 {
@@ -44,18 +45,19 @@ class RpdScheduleController extends Controller
         ));
     }
 
-    public function generate(Request $request, RpdProgram $rpdProgram, RpdScheduleBuilder $scheduleBuilder)
+    public function generate(Request $request, RpdProgram $rpdProgram, RpdScheduleBuilder $scheduleBuilder, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
         $scheduleBuilder->regenerate($rpdProgram);
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Календарный учебный график сформирован заново.');
 
         return redirect()
             ->route('rpd-programs.schedule.index', $rpdProgram)
             ->with('success', 'Календарный учебный график сброшен к автоматическому распределению.');
     }
 
-    public function update(Request $request, RpdProgram $rpdProgram)
+    public function update(Request $request, RpdProgram $rpdProgram, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
@@ -98,12 +100,15 @@ class RpdScheduleController extends Controller
             }
         }
 
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Календарный учебный график изменён.');
+        
+
         return redirect()
             ->route('rpd-programs.schedule.index', $rpdProgram)
             ->with('success', 'Календарный учебный график обновлён.');
     }
 
-    public function updateWeeks(Request $request, RpdProgram $rpdProgram)
+    public function updateWeeks(Request $request, RpdProgram $rpdProgram, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
@@ -118,6 +123,8 @@ class RpdScheduleController extends Controller
         $rpdProgram->scheduleItems()
             ->where('week_number', '>', $validated['schedule_weeks_count'])
             ->delete();
+
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Количество недель календарного графика изменено.');
 
         return redirect()
             ->route('rpd-programs.schedule.index', $rpdProgram)

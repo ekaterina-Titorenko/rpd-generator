@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RpdContentSection;
 use App\Models\RpdProgram;
 use Illuminate\Http\Request;
+use App\Services\RpdActivityLogger;
 
 class RpdContentSectionController extends Controller
 {
@@ -22,7 +23,7 @@ class RpdContentSectionController extends Controller
         return view('rpd-programs.content.index', compact('rpdProgram'));
     }
 
-    public function sync(Request $request, RpdProgram $rpdProgram)
+    public function sync(Request $request, RpdProgram $rpdProgram, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
@@ -52,12 +53,14 @@ class RpdContentSectionController extends Controller
             ->whereNotIn('rpd_curriculum_item_id', $sections->pluck('id'))
             ->delete();
 
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Содержание синхронизировано с учебным планом.');
+
         return redirect()
             ->route('rpd-programs.content.index', $rpdProgram)
             ->with('success', 'Содержание синхронизировано с разделами учебного плана.');
     }
 
-    public function update(Request $request, RpdProgram $rpdProgram, RpdContentSection $contentSection)
+   public function update(Request $request, RpdProgram $rpdProgram, RpdContentSection $contentSection, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
@@ -71,6 +74,8 @@ class RpdContentSectionController extends Controller
         ]);
 
         $contentSection->update($validated);
+
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Содержание учебного плана изменено.');
 
         return redirect()
             ->route('rpd-programs.content.index', $rpdProgram)

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\RpdContentSection;
 use App\Services\RpdScheduleBuilder;
+use App\Services\RpdActivityLogger;
+
 
 class RpdCurriculumItemController extends Controller
 {
@@ -45,7 +47,7 @@ class RpdCurriculumItemController extends Controller
         ));
     }
 
-    public function store(Request $request, RpdProgram $rpdProgram)
+    public function store(Request $request, RpdProgram $rpdProgram, RpdActivityLogger $activityLogger)
     {
         $this->authorizeProgramAccess($request, $rpdProgram);
 
@@ -105,12 +107,14 @@ class RpdCurriculumItemController extends Controller
         $this->syncContentSections($rpdProgram);
         app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
 
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: добавлена строка.');
+
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
             ->with('success', 'Строка учебного плана добавлена.');
     }
 
-    public function update(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
+    public function update(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem, RpdActivityLogger $activityLogger)
     {
 
         $this->authorizeProgramAccess($request, $rpdProgram);
@@ -146,12 +150,14 @@ class RpdCurriculumItemController extends Controller
         $this->syncContentSections($rpdProgram);
         app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
 
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: обновлена строка.');
+
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
             ->with('success', 'Строка учебного плана обновлена.');
     }
 
-    public function destroy(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem)
+    public function destroy(Request $request, RpdProgram $rpdProgram, RpdCurriculumItem $curriculumItem, RpdActivityLogger $activityLogger)
     {
 
         $this->authorizeProgramAccess($request, $rpdProgram);
@@ -167,6 +173,8 @@ class RpdCurriculumItemController extends Controller
         $this->renumberProgram($rpdProgram);
         $this->syncContentSections($rpdProgram);
         app(RpdScheduleBuilder::class)->ensureGeneratedIfEmpty($rpdProgram);
+
+        $activityLogger->log($request, $rpdProgram, 'system_update', 'Учебный план изменён: удалена строка.');
 
         return redirect()
             ->route('rpd-programs.curriculum.index', $rpdProgram)
