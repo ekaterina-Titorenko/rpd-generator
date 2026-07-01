@@ -116,20 +116,21 @@
 
         <div class="form-field">
             <label for="control_form">Контроль</label>
-            <input
-                id="control_form"
-                name="control_form"
-                type="text"
-                value="{{ old('control_form') }}"
-                list="control-forms-list"
-                placeholder="Начните вводить...">
+            <select id="control_form" name="control_form">
+                <option value="">Не выбрано</option>
+                @foreach ([
+                'Устный опрос',
+                'Самостоятельная/практическая работа',
+                'Тестирование',
+                'Контрольная работа',
+                'Защита',
+                ] as $controlFormOption)
+                <option value="{{ $controlFormOption }}" @selected(old('control_form')===$controlFormOption)>
+                    {{ $controlFormOption }}
+                </option>
+                @endforeach
+            </select>
         </div>
-
-        <datalist id="control-forms-list">
-            @foreach ($controlForms as $controlForm)
-            <option value="{{ $controlForm->name }}"></option>
-            @endforeach
-        </datalist>
 
         <div class="curriculum-add-actions">
             <button type="submit" class="btn btn-primary">Добавить</button>

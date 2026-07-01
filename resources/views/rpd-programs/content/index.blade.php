@@ -43,10 +43,10 @@
                 <div class="content-editor-header">
                     <div>
                         <strong>{{ $contentSection->number }}. {{ $contentSection->title }}</strong>
-                        <p>Описание раздела для документа РПД. Сохраняется автоматически.</p>
+                        <p>Описание раздела для документа РПД. После редактирования нажмите «Сохранить раздел».</p>
                     </div>
 
-                    <span class="badge">Автосохранение</span>
+                    <span class="badge">Ручное сохранение</span>
                 </div>
 
                 <div class="form-field">
@@ -57,13 +57,21 @@
                         rows="6"
                         form="content-section-form-{{ $contentSection->id }}"
                         placeholder="Опишите содержание раздела: темы, понятия, практические работы и результаты. Минимум 100 символов."
-                        data-autosubmit
                         data-autoresize
                         data-min-chars="100"
-                        data-char-counter-target="content-counter-{{ $contentSection->id }}">{{ old('content', $contentSection->content) }}</textarea>
+                        data-char-counter-target="content-counter-{{ $contentSection->id }}">{{ old('content_' . $contentSection->id, $contentSection->content) }}</textarea>
 
                     <div class="char-counter" id="content-counter-{{ $contentSection->id }}">
                         0 / 100 символов
+                    </div>
+
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            form="content-section-form-{{ $contentSection->id }}"
+                            class="btn btn-primary">
+                            Сохранить раздел
+                        </button>
                     </div>
 
                     @error('content')

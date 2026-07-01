@@ -45,13 +45,36 @@
     </td>
 
     <td>
-        <input
+        @php
+        $controlFormOptions = [
+            'Устный опрос',
+            'Самостоятельная/практическая работа',
+            'Тестирование',
+            'Контрольная работа',
+            'Защита',
+        ];
+
+        $currentControlForm = old('control_form', $item->control_form);
+        @endphp
+
+        <select
             form="update-curriculum-item-{{ $item->id }}"
             name="control_form"
-            type="text"
-            value="{{ old('control_form', $item->control_form) }}"
-            list="control-forms-list"
             data-autosubmit>
+            <option value="">Не выбрано</option>
+
+            @if ($currentControlForm && ! in_array($currentControlForm, $controlFormOptions, true))
+            <option value="{{ $currentControlForm }}" selected>
+                {{ $currentControlForm }}
+            </option>
+            @endif
+
+            @foreach ($controlFormOptions as $controlFormOption)
+            <option value="{{ $controlFormOption }}" @selected($currentControlForm === $controlFormOption)>
+                {{ $controlFormOption }}
+            </option>
+            @endforeach
+        </select>
     </td>
 
     <td>

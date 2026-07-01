@@ -11,7 +11,6 @@ use App\Models\RpdContentSection;
 use App\Services\RpdScheduleBuilder;
 use App\Services\RpdActivityLogger;
 
-
 class RpdCurriculumItemController extends Controller
 {
     public function index(Request $request, RpdProgram $rpdProgram)
@@ -57,7 +56,6 @@ class RpdCurriculumItemController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
-            'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -85,18 +83,8 @@ class RpdCurriculumItemController extends Controller
             $validated['is_final_work'] = true;
         }
 
-        if (! empty($validated['control_form_id'])) {
-            $controlForm = RpdControlForm::find($validated['control_form_id']);
-            $validated['control_form'] = $controlForm?->name;
-        } elseif (! empty($validated['control_form'])) {
-            $controlForm = RpdControlForm::query()->firstOrCreate(
-                ['name' => trim($validated['control_form'])],
-                ['is_default' => false, 'is_active' => true]
-            );
-
-            $validated['control_form_id'] = $controlForm->id;
-            $validated['control_form'] = $controlForm->name;
-        }
+        $validated['control_form_id'] = null;
+        $validated['control_form'] = $validated['control_form'] ?: null;
 
         $validated['sort_order'] = $this->nextSortOrder($rpdProgram, $validated['parent_id']);
         $validated['is_final_work'] = $validated['type'] === 'final_work';
@@ -124,27 +112,13 @@ class RpdCurriculumItemController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'theory_hours' => ['required', 'integer', 'min:0', 'max:1000'],
             'practice_hours' => ['required', 'integer', 'min:0', 'max:1000'],
-            'control_form_id' => ['nullable', 'integer', 'exists:rpd_control_forms,id'],
             'control_form' => ['nullable', 'string', 'max:255'],
         ]);
 
         $validated['total_hours'] = (int) $validated['theory_hours'] + (int) $validated['practice_hours'];
 
-        if (! empty($validated['control_form_id'])) {
-            $controlForm = RpdControlForm::find($validated['control_form_id']);
-            $validated['control_form'] = $controlForm?->name;
-        } elseif (! empty($validated['control_form'])) {
-            $controlForm = RpdControlForm::query()->firstOrCreate(
-                ['name' => trim($validated['control_form'])],
-                ['is_default' => false, 'is_active' => true]
-            );
-
-            $validated['control_form_id'] = $controlForm->id;
-            $validated['control_form'] = $controlForm->name;
-        } else {
-            $validated['control_form_id'] = null;
-            $validated['control_form'] = null;
-        }
+        $validated['control_form_id'] = null;
+        $validated['control_form'] = $validated['control_form'] ?: null;
 
         $curriculumItem->update($validated);
         $this->syncContentSections($rpdProgram);
